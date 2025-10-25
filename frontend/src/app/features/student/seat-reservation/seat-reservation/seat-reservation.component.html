@@ -1,0 +1,118 @@
+<div class="p-6">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Reserve a Seat</h1>
+
+  <!-- Reservation Form -->
+  <mat-card class="mb-6">
+    <mat-card-header>
+      <mat-card-title>Select Date & Time</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="pt-4">
+      <form [formGroup]="reservationForm">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Reservation Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="reservationDate" [min]="minDate">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-error *ngIf="reservationForm.get('reservationDate')?.hasError('required')">
+              Date is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full md:col-span-2">
+            <mat-label>Time Slot</mat-label>
+            <mat-select formControlName="slot">
+              <mat-option *ngFor="let s of slots" [value]="s.label" [disabled]="isSlotPast(s)">
+                {{s.label}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="mt-4">
+          <button mat-raised-button color="primary" (click)="checkAvailability()" [disabled]="checking">
+            <mat-icon>search</mat-icon>
+            Check Availability
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading -->
+  <div *ngIf="checking" class="flex justify-center py-10">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Available Seats -->
+  <mat-card *ngIf="!checking && availableSeats.length > 0">
+    <mat-card-header>
+      <mat-card-title>Available Seats ({{availableSeats.length}})</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="pt-4">
+      <!-- Filter by Section -->
+      <mat-form-field appearance="outline" class="mb-4">
+        <mat-label>Filter by Section</mat-label>
+        <mat-select [(value)]="selectedSection" (selectionChange)="filterSeats()">
+          <mat-option [value]="null">All Sections</mat-option>
+          <mat-option *ngFor="let section of sections" [value]="section">
+            {{section}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Seats Grid -->
+      <div class="grid grid-cols-5 md:grid-cols-10 gap-3">
+        <button *ngFor="let seat of filteredSeats"
+                class="aspect-square rounded flex flex-col items-center justify-center cursor-pointer transition"
+                [class.bg-green-200]="!isSelected(seat)"
+                [class.hover:bg-green-300]="!isSelected(seat)"
+                [class.bg-blue-500]="isSelected(seat)"
+                [class.text-white]="isSelected(seat)"
+                (click)="toggleSeatSelection(seat)">
+          <span class="text-xs font-semibold">{{seat.seatNumber}}</span>
+          <span class="text-[10px]">{{seat.section}}</span>
+        </button>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex gap-6 mt-6 text-sm">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 bg-green-200 rounded"></div>
+          <span>Available</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 bg-blue-500 rounded"></div>
+          <span>Selected</span>
+        </div>
+      </div>
+
+      <!-- Reserve Button -->
+      <div class="mt-6" *ngIf="selectedSeat">
+        <mat-card class="bg-blue-50">
+          <mat-card-content>
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="font-semibold">Selected Seat: {{selectedSeat.seatNumber}}</p>
+                <p class="text-sm text-gray-600">{{selectedSeat.section}} - Floor {{selectedSeat.floor}}</p>
+              </div>
+              <button mat-raised-button color="primary" [disabled]="reserving" (click)="reserveSeat()">
+                <mat-icon>event_seat</mat-icon>
+                Reserve Seat
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- No Available Seats -->
+  <mat-card *ngIf="!checking && availableSeats.length === 0 && searchPerformed">
+    <mat-card-content class="text-center py-10">
+      <mat-icon class="text-gray-300 text-8xl">event_busy</mat-icon>
+      <h2 class="text-2xl text-gray-600 mt-4">No seats available</h2>
+      <p class="text-gray-500 mt-2">Try a different date or time slot</p>
+    </mat-card-content>
+  </mat-card>
+</div>

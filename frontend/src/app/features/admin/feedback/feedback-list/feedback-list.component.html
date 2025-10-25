@@ -1,0 +1,111 @@
+<div class="p-6">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Student Feedback</h1>
+
+  <!-- Summary -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <mat-card>
+      <mat-card-content class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-sm">Total Feedback</p>
+          <p class="text-3xl font-bold text-blue-600">{{allFeedback.length}}</p>
+        </div>
+        <mat-icon class="text-5xl text-blue-200">feedback</mat-icon>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-sm">Unread</p>
+          <p class="text-3xl font-bold text-orange-600">{{unreadFeedback.length}}</p>
+        </div>
+        <mat-icon class="text-5xl text-orange-200">mark_email_unread</mat-icon>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-sm">Responded</p>
+          <p class="text-3xl font-bold text-green-600">{{respondedFeedback.length}}</p>
+        </div>
+        <mat-icon class="text-5xl text-green-200">done_all</mat-icon>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Feedback List -->
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>All Feedback</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="pt-4">
+      <mat-accordion *ngIf="allFeedback.length > 0">
+        <mat-expansion-panel *ngFor="let feedback of allFeedback">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="flex items-center gap-2">
+                <mat-icon *ngIf="!feedback.isRead" class="text-orange-500">mark_email_unread</mat-icon>
+                {{feedback.subject}}
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>
+              <span class="text-sm">{{feedback.user?.firstName}} {{feedback.user?.lastName}}</span>
+              <span class="mx-2">•</span>
+              <span class="text-sm">{{feedback.createdAt | date}}</span>
+              <span class="mx-2">•</span>
+              <mat-chip-set>
+                <mat-chip [class.bg-green-100]="feedback.response" 
+                          [class.text-green-700]="feedback.response"
+                          [class.bg-yellow-100]="!feedback.response"
+                          [class.text-yellow-700]="!feedback.response">
+                  {{feedback.response ? 'Responded' : 'Pending'}}
+                </mat-chip>
+              </mat-chip-set>
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+          
+          <div class="space-y-4 pt-4">
+            <!-- Original Message -->
+            <div>
+              <p class="font-semibold text-sm text-gray-600">From: {{feedback.user?.email}}</p>
+              <p class="mt-2">{{feedback.message}}</p>
+            </div>
+
+            <!-- Existing Response -->
+            <div *ngIf="feedback.response" class="bg-blue-50 p-4 rounded">
+              <p class="font-semibold text-sm text-blue-700">Your Response:</p>
+              <p class="mt-2">{{feedback.response}}</p>
+            </div>
+
+            <!-- Response Form -->
+            <div *ngIf="!feedback.response" class="bg-gray-50 p-4 rounded">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Your Response</mat-label>
+                <textarea matInput #responseText rows="3"></textarea>
+              </mat-form-field>
+              <button mat-raised-button color="primary" 
+                      (click)="respondToFeedback(feedback.id, responseText.value)">
+                <mat-icon>send</mat-icon>
+                Send Response
+              </button>
+            </div>
+
+            <!-- Mark as Read -->
+            <div *ngIf="!feedback.isRead" class="flex justify-end">
+              <button mat-button (click)="markAsRead(feedback.id)">
+                <mat-icon>done</mat-icon>
+                Mark as Read
+              </button>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+
+      <div *ngIf="allFeedback.length === 0 && !loading" class="text-center py-10">
+        <mat-icon class="text-gray-300 text-6xl">feedback</mat-icon>
+        <p class="text-gray-600 mt-4">No feedback received yet</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

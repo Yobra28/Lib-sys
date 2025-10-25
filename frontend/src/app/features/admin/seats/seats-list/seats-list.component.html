@@ -1,0 +1,61 @@
+<div class="p-6 space-y-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-semibold text-slate-800">Seats</h1>
+    <div class="flex items-center gap-3">
+      <mat-form-field appearance="outline" class="w-64">
+        <mat-label>Search</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Seat, section, status...">
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="addSeat()">
+        <mat-icon>add</mat-icon>
+        Add Seat
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="card p-0 overflow-hidden">
+    <table mat-table [dataSource]="dataSource" matSort class="w-full">
+      <ng-container matColumnDef="seatNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Seat</th>
+        <td mat-cell *matCellDef="let row">{{row.seatNumber}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="floor">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Floor</th>
+        <td mat-cell *matCellDef="let row">{{row.floor}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="section">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Section</th>
+        <td mat-cell *matCellDef="let row">{{row.section}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="badge-success" *ngIf="row.status==='AVAILABLE'">Available</span>
+          <span class="badge-warning" *ngIf="row.status==='OCCUPIED'">Occupied</span>
+          <span class="badge-accent" *ngIf="row.status==='RESERVED'">Reserved</span>
+          <span class="badge-muted" *ngIf="row.status==='MAINTENANCE'">Maintenance</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Description</th>
+        <td mat-cell *matCellDef="let row">{{row.description}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let row" class="space-x-2">
+          <button mat-button color="primary" (click)="editSeat(row)"><mat-icon>edit</mat-icon> Edit</button>
+          <button mat-button color="warn" (click)="deleteSeat(row)"><mat-icon>delete</mat-icon> Delete</button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[10,25,50]" showFirstLastButtons></mat-paginator>
+  </mat-card>
+</div>

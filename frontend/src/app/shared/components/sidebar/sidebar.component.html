@@ -1,0 +1,100 @@
+<div class="h-full flex flex-col">
+  <!-- Brand -->
+  <div class="px-4 py-3 border-b bg-white">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center shadow-sm">
+        <mat-icon>auto_stories</mat-icon>
+      </div>
+      <div>
+        <div class="font-semibold text-slate-800 leading-tight">Smart Library</div>
+        <div class="text-xs text-slate-500 -mt-0.5">Admin</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="flex-1 p-3 space-y-1 bg-white">
+    <!-- Admin/Librarian Menu -->
+    <ng-container *ngIf="isAdmin; else studentMenu">
+      <a mat-list-item routerLink="/admin/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-sky-600">dashboard</mat-icon>
+        <span matListItemTitle>Dashboard</span>
+      </a>
+      <a mat-list-item routerLink="/admin/books" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-emerald-600">book</mat-icon>
+        <span matListItemTitle>Books</span>
+      </a>
+      <a mat-list-item routerLink="/admin/borrows" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-indigo-600">swap_horiz</mat-icon>
+        <span matListItemTitle>Borrows</span>
+      </a>
+      <a mat-list-item routerLink="/admin/seats" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-rose-600">event_seat</mat-icon>
+        <span matListItemTitle>Seats</span>
+      </a>
+      <a mat-list-item routerLink="/admin/reservations" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-amber-600">event</mat-icon>
+        <span matListItemTitle>Reservations</span>
+      </a>
+      <a mat-list-item routerLink="/admin/fines" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-green-600">attach_money</mat-icon>
+        <span matListItemTitle>Fines</span>
+      </a>
+      <a mat-list-item routerLink="/admin/feedback" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-fuchsia-600">feedback</mat-icon>
+        <span matListItemTitle>Feedback</span>
+      </a>
+      <a mat-list-item routerLink="/admin/reports" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-teal-600">assessment</mat-icon>
+        <span matListItemTitle>Reports</span>
+      </a>
+      <a mat-list-item routerLink="/admin/settings" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-slate-700">settings</mat-icon>
+        <span matListItemTitle>Settings</span>
+      </a>
+    </ng-container>
+
+    <!-- Student Menu -->
+    <ng-template #studentMenu>
+      <a mat-list-item routerLink="/student/books" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-emerald-600">book</mat-icon>
+        <span matListItemTitle>Browse Books</span>
+      </a>
+      <a mat-list-item routerLink="/student/my-borrows" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-indigo-600">library_books</mat-icon>
+        <span matListItemTitle>My Borrows</span>
+      </a>
+      <a mat-list-item routerLink="/student/seat-reservation" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-rose-600">event_seat</mat-icon>
+        <span matListItemTitle>Reserve Seat</span>
+      </a>
+      <a mat-list-item routerLink="/student/my-fines" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-green-600">attach_money</mat-icon>
+        <span matListItemTitle>My Fines</span>
+      </a>
+      <a mat-list-item routerLink="/student/feedback" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-fuchsia-600">feedback</mat-icon>
+        <span matListItemTitle>Feedback</span>
+      </a>
+      <a mat-list-item routerLink="/student/notifications" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-amber-600">notifications</mat-icon>
+        <span matListItemTitle>Notifications</span>
+      </a>
+      <a mat-list-item routerLink="/student/profile" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-slate-700">person</mat-icon>
+        <span matListItemTitle>Profile</span>
+      </a>
+    </ng-template>
+  </nav>
+
+  <!-- Footer user card -->
+  <div class="p-3 border-t bg-white">
+    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 mb-3" *ngIf="user as u">
+      <div class="text-sm font-medium text-slate-800">{{u.firstName}} {{u.lastName}}</div>
+      <div class="text-xs text-slate-500">{{u.email}}</div>
+    </div>
+    <button mat-stroked-button color="primary" class="w-full" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  </div>
+</div>

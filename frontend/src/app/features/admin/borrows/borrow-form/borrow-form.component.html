@@ -1,0 +1,41 @@
+<h2 mat-dialog-title>Issue Book</h2>
+<mat-dialog-content>
+  <form [formGroup]="borrowForm" class="space-y-4">
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Student ID</mat-label>
+      <input matInput formControlName="userId" placeholder="user-uuid" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Book</mat-label>
+      <input type="text" matInput [matAutocomplete]="auto" formControlName="bookSearch">
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onBookSelected($event.option.value)" [displayWith]="displayBook.bind(this)">
+        <mat-option *ngFor="let option of filteredBooks | async" [value]="option">
+          {{option.title}} — {{option.author}}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <input type="hidden" formControlName="bookId" />
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Borrow Duration</mat-label>
+      <mat-select formControlName="duration">
+        <mat-option *ngFor="let duration of borrowDurations" [value]="duration.value">
+          {{duration.label}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Due Date</mat-label>
+      <input matInput [min]="minDate" [matDatepicker]="picker" formControlName="dueDate">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="loading">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="borrowForm.invalid || loading">Issue</button>
+</mat-dialog-actions>

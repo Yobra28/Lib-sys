@@ -1,0 +1,4 @@
+/* Landing page specific tweaks (most styling via Tailwind) */
+.hero-gradient {
+  background: radial-gradient(60rem 60rem at 50% -10%, rgba(59,130,246,0.15), transparent);
+}

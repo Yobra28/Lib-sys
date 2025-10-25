@@ -1,0 +1,107 @@
+<h2 mat-dialog-title class="flex items-center justify-between">
+  <span>Book Details</span>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+
+<mat-dialog-content>
+  <div *ngIf="loading" class="flex justify-center py-10">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && book" class="space-y-6">
+    <!-- Book Information -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-sm text-gray-600">Title</p>
+        <p class="font-semibold">{{book.title}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Author</p>
+        <p class="font-semibold">{{book.author}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">ISBN</p>
+        <p class="font-semibold">{{book.isbn}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Category</p>
+        <p class="font-semibold">{{book.category}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Publisher</p>
+        <p class="font-semibold">{{book.publisher || 'N/A'}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Published Year</p>
+        <p class="font-semibold">{{book.publishedYear || 'N/A'}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Edition</p>
+        <p class="font-semibold">{{book.edition || 'N/A'}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Total Copies</p>
+        <p class="font-semibold">{{book.totalCopies}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Available Copies</p>
+        <p class="font-semibold text-green-600">{{book.availableCopies}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-600">Status</p>
+        <mat-chip-set>
+          <mat-chip [class.bg-green-100]="book.status === 'AVAILABLE'" 
+                    [class.text-green-700]="book.status === 'AVAILABLE'"
+                    [class.bg-red-100]="book.status === 'BORROWED'"
+                    [class.text-red-700]="book.status === 'BORROWED'">
+            {{book.status}}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </div>
+
+    <div *ngIf="book.description">
+      <p class="text-sm text-gray-600">Description</p>
+      <p class="mt-2">{{book.description}}</p>
+    </div>
+
+    <!-- Active Borrows -->
+    <mat-tab-group *ngIf="activeBorrows.length > 0">
+      <mat-tab label="Currently Borrowed ({{activeBorrows.length}})">
+        <div class="py-4">
+          <table mat-table [dataSource]="activeBorrows" class="w-full">
+            <ng-container matColumnDef="user">
+              <th mat-header-cell *matHeaderCellDef>Borrowed By</th>
+              <td mat-cell *matCellDef="let borrow">
+                {{borrow.user?.firstName}} {{borrow.user?.lastName}}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Borrowed On</th>
+              <td mat-cell *matCellDef="let borrow">
+                {{borrow.borrowDate | date}}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="due">
+              <th mat-header-cell *matHeaderCellDef>Due Date</th>
+              <td mat-cell *matCellDef="let borrow">
+                {{borrow.dueDate | date}}
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['user', 'date', 'due']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['user', 'date', 'due'];"></tr>
+          </table>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button color="primary" (click)="close()">Close</button>
+</mat-dialog-actions>

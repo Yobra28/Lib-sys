@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0b1220;
+}
+
+html, body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Utilities */
+.container-app {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.btn-primary { @apply bg-primary-600 hover:bg-primary-700 text-white rounded-md shadow-sm transition-colors; }
+.btn-secondary { @apply bg-secondary-600 hover:bg-secondary-700 text-white rounded-md shadow-sm transition-colors; }
+.btn-accent { @apply bg-accent-600 hover:bg-accent-700 text-white rounded-md shadow-sm transition-colors; }
+.icon-success { @apply text-green-600; }
+.icon-warning { @apply text-amber-600; }
+.icon-danger { @apply text-rose-600; }
+.icon-info { @apply text-sky-600; }
+
+.badge-success { @apply bg-success-100 text-success-700 rounded-full px-2 py-0.5 text-xs; }
+.badge-warning { @apply bg-warning-100 text-warning-700 rounded-full px-2 py-0.5 text-xs; }
+.badge-danger  { @apply bg-danger-100  text-danger-700  rounded-full px-2 py-0.5 text-xs; }
+
+.card { @apply bg-white rounded-xl border border-slate-200 shadow-sm; }
+.table-header { @apply bg-slate-50 text-slate-700; }
+
+/* Angular Material tweaks */
+.mat-mdc-form-field { @apply w-full; }
+
+/* Dialog: disable internal scrollbars for book details only */
+.book-details-dialog .mat-mdc-dialog-content,
+.book-details-dialog .mdc-dialog__content {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Page scaffolding */
+.page { @apply space-y-4; }
+.page-header { @apply flex items-center justify-between; }
+.page-title { @apply text-2xl font-semibold text-slate-800; }
+.page-actions { @apply flex items-center gap-2; }
+.filters-bar { @apply bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3; }
+
+/* Soft buttons */
+.btn-soft { @apply rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700; }
+
+/* Pills */
+.pill { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium; }
+.pill-blue { @apply bg-blue-100 text-blue-700; }
+.pill-green { @apply bg-green-100 text-green-700; }
+.pill-amber { @apply bg-amber-100 text-amber-700; }
+.pill-rose { @apply bg-rose-100 text-rose-700; }
+/* Remove the vertical divider line between prefix icon and input on outlined fields */
+.mat-mdc-form-field .mat-mdc-form-field-icon-prefix {
+  border-right: 0 !important;
+}
+/* Ensure no extra left border is shown next to the prefix */
+.mat-mdc-form-field .mat-mdc-form-field-icon-prefix + .mat-mdc-form-field-infix {
+  border-left: 0 !important;
+}
+/* Remove only the tiny seam between prefix icon and input for outlined fields */
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading {
+  border-right-width: 0 !important;
+}
+/* Keep the main outline borders intact */

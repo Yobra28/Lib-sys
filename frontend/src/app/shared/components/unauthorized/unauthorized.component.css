@@ -1,0 +1,51 @@
+.unauthorized-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px;
+}
+
+.unauthorized-card {
+  max-width: 500px;
+  width: 100%;
+}
+
+.card-content {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.unauthorized-icon {
+  font-size: 80px;
+  width: 80px;
+  height: 80px;
+  color: #ef4444;
+  margin-bottom: 24px;
+}
+
+.unauthorized-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.unauthorized-message {
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.unauthorized-submessage {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 32px;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}

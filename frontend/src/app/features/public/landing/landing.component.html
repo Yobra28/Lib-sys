@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-gradient-to-b from-white to-slate-50">
+  <!-- Nav -->
+  <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+    <div class="container-app flex items-center justify-between h-16">
+      <div class="flex items-center gap-2">
+        <div class="h-9 w-9 rounded-lg bg-primary-600 text-white grid place-items-center font-bold">L</div>
+        <span class="text-slate-900 font-semibold">Library</span>
+      </div>
+      <nav class="hidden sm:flex items-center gap-3">
+        <a routerLink="/auth/login" class="btn-soft px-3 py-1.5">Login</a>
+        <a routerLink="/auth/register" class="btn-primary px-3 py-1.5">Get started</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 -z-10 bg-[radial-gradient(60rem_60rem_at_50%_-10%,rgba(59,130,246,0.15),transparent)]"></div>
+    <div class="container-app py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 rounded-full pl-2 pr-3 py-1 text-xs bg-primary-50 text-primary-700 border border-primary-100">
+          <span class="inline-block h-2 w-2 rounded-full bg-primary-500"></span>
+          New: Seat reservations, fines & real‑time notifications
+        </div>
+        <h1 class="mt-4 text-4xl lg:text-5xl font-bold tracking-tight text-slate-900">
+          Smart Library Management for modern campuses
+        </h1>
+        <p class="mt-4 text-slate-600 text-lg">
+          Search, borrow, reserve seats, manage fines, and get insights—all in one fast, intuitive dashboard for admins, librarians, and students.
+        </p>
+        <div class="mt-8 flex items-center gap-3">
+          <a routerLink="/auth/register" class="btn-primary px-5 py-3 text-sm">Create account</a>
+          <a routerLink="/auth/login" class="btn-soft px-5 py-3 text-sm">Sign in</a>
+        </div>
+        <div class="mt-6 flex items-center gap-4 text-xs text-slate-500">
+          <div class="flex -space-x-2">
+            <div class="h-6 w-6 rounded-full bg-slate-200 border border-white"></div>
+            <div class="h-6 w-6 rounded-full bg-slate-300 border border-white"></div>
+            <div class="h-6 w-6 rounded-full bg-slate-400 border border-white"></div>
+          </div>
+          <span>Trusted by students and staff</span>
+        </div>
+      </div>
+      <div>
+        <div class="relative">
+          <div class="absolute -inset-4 bg-gradient-to-tr from-primary-200 via-secondary-200 to-accent-200 blur-2xl opacity-60"></div>
+          <div class="relative card p-4 sm:p-6">
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="text-slate-500 text-xs">Books</div>
+                <div class="mt-1 text-2xl font-semibold">120k+</div>
+                <div class="mt-4 h-24 bg-gradient-to-r from-primary-200 to-primary-300 rounded"></div>
+              </div>
+              <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="text-slate-500 text-xs">Reservations</div>
+                <div class="mt-1 text-2xl font-semibold">99.9%</div>
+                <div class="mt-4 h-24 bg-gradient-to-r from-secondary-200 to-secondary-300 rounded"></div>
+              </div>
+              <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="text-slate-500 text-xs">On‑time returns</div>
+                <div class="mt-1 text-2xl font-semibold">+34%</div>
+                <div class="mt-4 h-24 bg-gradient-to-r from-accent-200 to-accent-300 rounded"></div>
+              </div>
+              <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="text-slate-500 text-xs">Active users</div>
+                <div class="mt-1 text-2xl font-semibold">4,200</div>
+                <div class="mt-4 h-24 bg-gradient-to-r from-primary-200 to-secondary-300 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="container-app py-12 lg:py-16">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="card p-6">
+        <div class="h-10 w-10 rounded-lg bg-primary-100 text-primary-700 grid place-items-center font-semibold">🔎</div>
+        <h3 class="mt-4 font-semibold text-slate-900">Powerful search</h3>
+        <p class="mt-1 text-sm text-slate-600">Find books instantly with filters for author, category, availability, and more.</p>
+      </div>
+      <div class="card p-6">
+        <div class="h-10 w-10 rounded-lg bg-secondary-100 text-secondary-700 grid place-items-center font-semibold">🪑</div>
+        <h3 class="mt-4 font-semibold text-slate-900">Seat reservations</h3>
+        <p class="mt-1 text-sm text-slate-600">Reserve reading seats with time slots and live occupancy updates.</p>
+      </div>
+      <div class="card p-6">
+        <div class="h-10 w-10 rounded-lg bg-accent-100 text-accent-700 grid place-items-center font-semibold">🔔</div>
+        <h3 class="mt-4 font-semibold text-slate-900">Smart notifications</h3>
+        <p class="mt-1 text-sm text-slate-600">Reminders for due dates, fines, reservations, and announcements.</p>
+      </div>
+      <div class="card p-6">
+        <div class="h-10 w-10 rounded-lg bg-primary-100 text-primary-700 grid place-items-center font-semibold">📊</div>
+        <h3 class="mt-4 font-semibold text-slate-900">Admin analytics</h3>
+        <p class="mt-1 text-sm text-slate-600">Track borrows, popular titles, and utilization with exportable reports.</p>
+      </div>
+      <div class="card p-6">
+        <div class="h-10 w-10 rounded-lg bg-secondary-100 text-secondary-700 grid place-items-center font-semibold">🧾</div>
+        <h3 class="mt-4 font-semibold text-slate-900">Fine management</h3>
+        <p class="mt-1 text-sm text-slate-600">Automated fine calculation and payments to reduce manual workload.</p>
+      </div>
+      <div class="card p-6">
+        <div class="h-10 w-10 rounded-lg bg-accent-100 text-accent-700 grid place-items-center font-semibold">🔐</div>
+        <h3 class="mt-4 font-semibold text-slate-900">Role‑based access</h3>
+        <p class="mt-1 text-sm text-slate-600">Tailored experiences for admins, librarians, and students.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="container-app py-12 lg:py-16">
+    <div class="card p-8 lg:p-10 text-center bg-gradient-to-br from-white to-slate-50">
+      <h2 class="text-2xl font-semibold text-slate-900">Ready to streamline your library?</h2>
+      <p class="mt-2 text-slate-600">Get started in minutes—no setup required.</p>
+      <div class="mt-6 flex items-center justify-center gap-3">
+        <a routerLink="/auth/register" class="btn-primary px-5 py-3 text-sm">Create account</a>
+        <a routerLink="/auth/login" class="btn-soft px-5 py-3 text-sm">Sign in</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-slate-200 py-8">
+    <div class="container-app text-sm text-slate-500 flex items-center justify-between">
+      <span>© {{ year }} Library. All rights reserved.</span>
+      <div class="flex items-center gap-4">
+        <a href="#" class="hover:text-slate-700">Privacy</a>
+        <a href="#" class="hover:text-slate-700">Terms</a>
+      </div>
+    </div>
+  </footer>
+</div>

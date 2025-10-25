@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>{{isEditMode ? 'Edit Seat' : 'Add New Seat'}}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="seatForm" class="space-y-4">
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Seat Number</mat-label>
+      <input matInput formControlName="seatNumber" placeholder="A-001" appAutoFocus>
+      <mat-hint>Format: A-001</mat-hint>
+      <mat-error>Valid seat number required (e.g., A-001)</mat-error>
+    </mat-form-field>
+
+    <div class="grid grid-cols-2 gap-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Floor</mat-label>
+        <input matInput type="number" formControlName="floor" min="1">
+        <mat-error>Floor must be at least 1</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Section</mat-label>
+        <mat-select formControlName="section">
+          <mat-option value="Reading Hall">Reading Hall</mat-option>
+          <mat-option value="Study Room A">Study Room A</mat-option>
+          <mat-option value="Study Room B">Study Room B</mat-option>
+          <mat-option value="Silent Zone">Silent Zone</mat-option>
+        </mat-select>
+        <mat-error>Section is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        <mat-option *ngFor="let status of statuses" [value]="status">
+          {{status}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="2"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="loading">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" 
+          [disabled]="seatForm.invalid || loading">
+    {{isEditMode ? 'Update' : 'Create'}}
+  </button>
+</mat-dialog-actions>

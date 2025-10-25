@@ -1,0 +1,85 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+import { ApiProperty } from '@nestjs/swagger';
+import { 
+  IsEmail, 
+  IsNotEmpty, 
+  IsString, 
+  MinLength, 
+  IsOptional, 
+  IsEnum,
+  Matches 
+} from 'class-validator';
+import { UserRole } from '@prisma/client';
+
+export class CreateUserDto {
+  @ApiProperty({ 
+    example: 'john.doe@example.com',
+    description: 'User email address'
+  })
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  @IsNotEmpty({ message: 'Email is required' })
+  email: string;
+
+  @ApiProperty({ 
+    example: 'Password123',
+    description: 'User password (minimum 6 characters)'
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Password is required' })
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/, {
+    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+  })
+  password: string;
+
+  @ApiProperty({ 
+    example: 'John',
+    description: 'User first name'
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'First name is required' })
+  @MinLength(2, { message: 'First name must be at least 2 characters long' })
+  firstName: string;
+
+  @ApiProperty({ 
+    example: 'Doe',
+    description: 'User last name'
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Last name is required' })
+  @MinLength(2, { message: 'Last name must be at least 2 characters long' })
+  lastName: string;
+
+  @ApiProperty({ 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    enum: UserRole,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    example: UserRole.STUDENT,
+    description: 'User role (ADMIN, LIBRARIAN, STUDENT)'
+  })
+  @IsEnum(UserRole, { message: 'Role must be ADMIN, LIBRARIAN, or STUDENT' })
+  @IsNotEmpty({ message: 'Role is required' })
+  role: UserRole;
+
+  @ApiProperty({ 
+    example: '+254712345678',
+    required: false,
+    description: 'User phone number'
+  })
+  @IsString()
+  @IsOptional()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Please provide a valid phone number'
+  })
+  phone?: string;
+
+  @ApiProperty({ 
+    example: 'Nairobi, Kenya',
+    required: false,
+    description: 'User address'
+  })
+  @IsString()
+  @IsOptional()
+  address?: string;
+}

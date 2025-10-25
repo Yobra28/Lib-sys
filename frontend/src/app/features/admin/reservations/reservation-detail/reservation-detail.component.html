@@ -1,0 +1,54 @@
+<h2 mat-dialog-title class="flex items-center justify-between">
+  <span>Reservation Details</span>
+  <button mat-icon-button (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+
+<mat-dialog-content>
+  <div *ngIf="loading" class="flex justify-center py-10">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && reservation" class="space-y-4">
+    <div>
+      <h3 class="font-semibold text-lg mb-2">User Information</h3>
+      <div class="bg-gray-50 p-4 rounded">
+        <p><span class="font-semibold">Name:</span> {{reservation.user?.firstName}} {{reservation.user?.lastName}}</p>
+        <p><span class="font-semibold">Email:</span> {{reservation.user?.email}}</p>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div>
+      <h3 class="font-semibold text-lg mb-2">Seat Information</h3>
+      <div class="bg-gray-50 p-4 rounded">
+        <p><span class="font-semibold">Seat Number:</span> {{reservation.seat?.seatNumber}}</p>
+        <p><span class="font-semibold">Section:</span> {{reservation.seat?.section}}</p>
+        <p><span class="font-semibold">Floor:</span> {{reservation.seat?.floor}}</p>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div>
+      <h3 class="font-semibold text-lg mb-2">Reservation Details</h3>
+      <div class="bg-gray-50 p-4 rounded space-y-2">
+        <p><span class="font-semibold">Date:</span> {{reservation.reservationDate | date:'fullDate'}}</p>
+        <p><span class="font-semibold">Start Time:</span> {{reservation.startTime | date:'shortTime'}}</p>
+        <p><span class="font-semibold">End Time:</span> {{reservation.endTime | date:'shortTime'}}</p>
+        <p><span class="font-semibold">Status:</span> 
+          <mat-chip-set>
+            <mat-chip>{{reservation.status}}</mat-chip>
+          </mat-chip-set>
+        </p>
+        <p *ngIf="reservation.notes"><span class="font-semibold">Notes:</span> {{reservation.notes}}</p>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button color="primary" (click)="close()">Close</button>
+</mat-dialog-actions>
