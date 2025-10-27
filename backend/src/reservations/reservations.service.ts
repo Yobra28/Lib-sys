@@ -12,10 +12,14 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ReservationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(userId: string, createReservationDto: CreateReservationDto) {
     const seat = await this.prisma.seat.findUnique({
@@ -97,11 +101,13 @@ export class ReservationsService {
       },
     });
 
-    // Update seat status to RESERVED
-    await this.prisma.seat.update({
-      where: { id: createReservationDto.seatId },
-      data: { status: 'RESERVED' },
-    });
+    // Note: We don't update seat status to RESERVED here because:
+    // 1. The seat should remain AVAILABLE for other time slots
+    // 2. Time conflicts are handled by the reservation conflict detection logic
+    // 3. Multiple reservations can exist for the same seat at different times
+
+    // Send email notification for successful reservation
+    await this.notificationsService.sendReservationConfirmation(reservation.id);
 
     return reservation;
   }
@@ -233,22 +239,40 @@ export class ReservationsService {
       },
     });
 
-    // Update seat status back to AVAILABLE when reservation is cancelled
-    await this.prisma.seat.update({
-      where: { id: reservation.seatId },
-      data: { status: 'AVAILABLE' },
-    });
+    // Note: We don't need to update seat status here since seats remain AVAILABLE
+    // and time conflicts are handled by the reservation conflict detection logic
 
     return updatedReservation;
   }
 
-  async getMyReservations(userId: string) {
-    return this.prisma.seatReservation.findMany({
-      where: { userId },
-      include: {
-        seat: true,
+  async getMyReservations(userId: string, page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+    
+    const [reservations, total] = await Promise.all([
+      this.prisma.seatReservation.findMany({
+        where: { userId },
+        include: {
+          seat: true,
+        },
+        orderBy: { reservationDate: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.seatReservation.count({
+        where: { userId },
+      }),
+    ]);
+
+    return {
+      reservations,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1,
       },
-      orderBy: { reservationDate: 'desc' },
-    });
+    };
   }
 }

@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { BorrowsController } from './borrows.controller';
 import { BorrowsService } from './borrows.service';
-import { PrismaModule } from 'src/prisma/prisma.module'; // <-- Add this
-import { ConfigModule } from '@nestjs/config'; // <-- Add this
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     PrismaModule,
-    ConfigModule, // <-- provides ConfigService
+    ConfigModule,
+    NotificationsModule,
   ],
   controllers: [BorrowsController],
   providers: [BorrowsService],

@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
 :root {
   --bg: #0b1220;
 }
@@ -39,6 +67,62 @@ body {
 /* Angular Material tweaks */
 .mat-mdc-form-field { @apply w-full; }
 
+/* Modern borderless form fields - Remove all borders */
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline .mdc-notched-outline__leading,
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline .mdc-notched-outline__notch,
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline .mdc-notched-outline__trailing {
+  border: none !important;
+  border-width: 0 !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
+  border: none !important;
+  border-width: 0 !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+  background-color: transparent !important;
+  background: none !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mat-mdc-form-field-infix {
+  background-color: transparent !important;
+  background: none !important;
+  border: none !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mat-mdc-input-element {
+  border: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Remove all outline borders */
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline {
+  border: none !important;
+  border-width: 0 !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline * {
+  border: none !important;
+  border-width: 0 !important;
+}
+
+/* Modern focus styles for accessibility */
+.mat-mdc-input-element:focus,
+.mat-mdc-text-field textarea:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: -2px;
+  border-radius: 6px;
+  border: none !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mat-mdc-form-field-focus-overlay {
+  background-color: transparent !important;
+}
+
 /* Dialog: disable internal scrollbars for book details only */
 .book-details-dialog .mat-mdc-dialog-content,
 .book-details-dialog .mdc-dialog__content {
@@ -62,16 +146,85 @@ body {
 .pill-green { @apply bg-green-100 text-green-700; }
 .pill-amber { @apply bg-amber-100 text-amber-700; }
 .pill-rose { @apply bg-rose-100 text-rose-700; }
-/* Remove the vertical divider line between prefix icon and input on outlined fields */
+/* Remove ALL vertical divider lines between prefix icon and input */
 .mat-mdc-form-field .mat-mdc-form-field-icon-prefix {
   border-right: 0 !important;
+  border: none !important;
+  margin-right: 8px;
+  padding-right: 0 !important;
 }
-/* Ensure no extra left border is shown next to the prefix */
+
+/* Ensure no extra borders are shown anywhere in form fields */
 .mat-mdc-form-field .mat-mdc-form-field-icon-prefix + .mat-mdc-form-field-infix {
   border-left: 0 !important;
+  border: none !important;
+  padding-left: 8px !important;
 }
-/* Remove only the tiny seam between prefix icon and input for outlined fields */
+
+/* Remove ALL vertical lines/seams in Material Design fields */
 .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading {
   border-right-width: 0 !important;
+  border-right: none !important;
+  border-left: none !important;
 }
-/* Keep the main outline borders intact */
+
+/* Remove borders from all form field wrappers */
+.mat-mdc-form-field-infix {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Remove vertical dividers in form field containers */
+.mat-mdc-text-field-wrapper {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.mat-mdc-form-field-flex {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Remove any pseudo-element borders */
+.mat-mdc-form-field::before,
+.mat-mdc-form-field::after {
+  border: none !important;
+  display: none !important;
+}
+
+/* Icon styling */
+.mat-mdc-form-field-icon-prefix mat-icon,
+.mat-mdc-form-field-icon-suffix mat-icon {
+  color: #6b7280;
+}
+
+/* Additional overrides for complete border removal */
+.mat-mdc-form-field-appearance-outline {
+  background: transparent !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+  border: none !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mat-mdc-form-field-flex {
+  border: none !important;
+}
+
+/* For selects */
+.mat-mdc-select {
+  border: none !important;
+}
+
+.mat-mdc-select-trigger {
+  border: none !important;
+}
+
+/* Label styling for better visibility without borders */
+.mat-mdc-form-field-label {
+  color: #64748b;
+}
+
+.mat-mdc-form-field-label.mat-focused {
+  color: #3b82f6;
+}

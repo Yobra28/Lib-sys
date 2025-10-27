@@ -233,4 +233,104 @@ export class NotificationsService {
       });
     }
   }
+
+  // Send seat reservation reminders 15 minutes before end time
+  @Cron('*/15 * * * *') // Every 15 minutes
+  async sendSeatReservationReminders() {
+    const now = new Date();
+    const reminderTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+
+    const upcomingReservations = await this.prisma.seatReservation.findMany({
+      where: {
+        status: 'APPROVED',
+        reservationDate: {
+          gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+          lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+        },
+        endTime: {
+          gte: now,
+          lte: reminderTime,
+        },
+      },
+      include: {
+        user: true,
+        seat: true,
+      },
+    });
+
+    for (const reservation of upcomingReservations) {
+      // Check if we already sent a reminder for this reservation
+      const existingReminder = await this.prisma.notification.findFirst({
+        where: {
+          userId: reservation.userId,
+          type: 'SEAT_REMINDER',
+          message: {
+            contains: `Seat ${reservation.seat.seatNumber}`,
+          },
+          sentAt: {
+            gte: new Date(now.getTime() - 30 * 60 * 1000), // Within last 30 minutes
+          },
+        },
+      });
+
+      if (!existingReminder) {
+        await this.create({
+          userId: reservation.userId,
+          title: 'Seat Reservation Ending Soon',
+          message: `Your seat reservation for ${reservation.seat.seatNumber} ends in 15 minutes (${new Date(reservation.endTime).toLocaleTimeString()}). Please prepare to vacate the seat.`,
+          type: 'SEAT_REMINDER',
+        });
+      }
+    }
+
+    console.log(`✅ Sent ${upcomingReservations.length} seat reservation reminders`);
+  }
+
+  // Send due date reminders 5 hours before due date
+  @Cron('0 */6 * * *') // Every 6 hours
+  async sendDueDateReminders5Hours() {
+    const now = new Date();
+    const fiveHoursFromNow = new Date(now.getTime() + 5 * 60 * 60 * 1000);
+
+    const dueBooks = await this.prisma.borrow.findMany({
+      where: {
+        status: 'ACTIVE',
+        dueDate: {
+          gte: now,
+          lte: fiveHoursFromNow,
+        },
+      },
+      include: {
+        user: true,
+        book: true,
+      },
+    });
+
+    for (const borrow of dueBooks) {
+      // Check if we already sent a 5-hour reminder for this borrow
+      const existingReminder = await this.prisma.notification.findFirst({
+        where: {
+          userId: borrow.userId,
+          type: 'DUE_REMINDER_5H',
+          message: {
+            contains: borrow.book.title,
+          },
+          sentAt: {
+            gte: new Date(now.getTime() - 6 * 60 * 60 * 1000), // Within last 6 hours
+          },
+        },
+      });
+
+      if (!existingReminder) {
+        await this.create({
+          userId: borrow.userId,
+          title: 'Book Due in 5 Hours',
+          message: `Your borrowed book "${borrow.book.title}" is due in 5 hours (${new Date(borrow.dueDate).toLocaleString()}). Please return it on time to avoid fines.`,
+          type: 'DUE_REMINDER_5H',
+        });
+      }
+    }
+
+    console.log(`✅ Sent ${dueBooks.length} 5-hour due date reminders`);
+  }
 }

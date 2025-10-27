@@ -19,8 +19,31 @@ export class ReservationService {
     return this.http.get<Reservation[]>(this.apiUrl, { params });
   }
 
-  getMyReservations(): Observable<Reservation[]> {
-    return this.http.get<Reservation[]>(`${this.apiUrl}/my-reservations`);
+  getMyReservations(page: number = 1, limit: number = 5): Observable<{
+    reservations: Reservation[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+    return this.http.get<{
+      reservations: Reservation[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+      };
+    }>(`${this.apiUrl}/my-reservations`, { params });
   }
 
   getById(id: string): Observable<Reservation> {

@@ -1,0 +1,178 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
+  <!-- Header -->
+  <div class="bg-white/80 backdrop-blur-sm border-b border-indigo-100 shadow-sm mb-8">
+    <div class="container-app py-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            📚 Browse Books
+          </h1>
+          <p class="text-slate-600 mt-2">Discover and borrow from our extensive collection</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <input type="text" placeholder="Search books, authors, ISBN..." 
+                   class="w-80 px-4 py-3 pl-12 rounded-full border border-indigo-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all">
+            <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-400">
+              🔍
+            </div>
+          </div>
+          <button class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+            🔍 Search
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="container-app mb-8">
+    <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-lg">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-600 font-medium">Filter by:</span>
+          <select class="px-4 py-2 rounded-full border border-indigo-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+            <option>All Categories</option>
+            <option>Computer Science</option>
+            <option>Mathematics</option>
+            <option>Literature</option>
+            <option>Science</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-slate-600 font-medium">Sort by:</span>
+          <select class="px-4 py-2 rounded-full border border-indigo-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+            <option>Most Popular</option>
+            <option>Newest</option>
+            <option>Title A-Z</option>
+            <option>Author A-Z</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-slate-600 font-medium">Availability:</span>
+          <select class="px-4 py-2 rounded-full border border-indigo-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+            <option>All Books</option>
+            <option>Available Now</option>
+            <option>Reserved</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Books Grid -->
+  <div class="container-app">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Book Card 1 -->
+      <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+        <div class="relative mb-4">
+          <div class="h-48 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center">
+            <span class="text-6xl">📖</span>
+          </div>
+          <div class="absolute top-3 right-3 bg-emerald-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+            Available
+          </div>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
+          Introduction to Algorithms
+        </h3>
+        <p class="text-slate-600 text-sm mb-3">by Thomas H. Cormen</p>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-1">
+            <span class="text-amber-400">⭐⭐⭐⭐⭐</span>
+            <span class="text-sm text-slate-600">4.8</span>
+          </div>
+          <div class="text-sm text-slate-500">ISBN: 978-0262033848</div>
+        </div>
+        <button class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+          📚 Borrow Book
+        </button>
+      </div>
+
+      <!-- Book Card 2 -->
+      <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+        <div class="relative mb-4">
+          <div class="h-48 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center">
+            <span class="text-6xl">📚</span>
+          </div>
+          <div class="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+            Reserved
+          </div>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
+          Clean Code
+        </h3>
+        <p class="text-slate-600 text-sm mb-3">by Robert C. Martin</p>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-1">
+            <span class="text-amber-400">⭐⭐⭐⭐⭐</span>
+            <span class="text-sm text-slate-600">4.9</span>
+          </div>
+          <div class="text-sm text-slate-500">ISBN: 978-0132350884</div>
+        </div>
+        <button class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+          ⏰ Join Waitlist
+        </button>
+      </div>
+
+      <!-- Book Card 3 -->
+      <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+        <div class="relative mb-4">
+          <div class="h-48 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center">
+            <span class="text-6xl">📖</span>
+          </div>
+          <div class="absolute top-3 right-3 bg-emerald-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+            Available
+          </div>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+          Design Patterns
+        </h3>
+        <p class="text-slate-600 text-sm mb-3">by Gang of Four</p>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-1">
+            <span class="text-amber-400">⭐⭐⭐⭐</span>
+            <span class="text-sm text-slate-600">4.6</span>
+          </div>
+          <div class="text-sm text-slate-500">ISBN: 978-0201633610</div>
+        </div>
+        <button class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+          📚 Borrow Book
+        </button>
+      </div>
+
+      <!-- Book Card 4 -->
+      <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+        <div class="relative mb-4">
+          <div class="h-48 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl flex items-center justify-center">
+            <span class="text-6xl">📖</span>
+          </div>
+          <div class="absolute top-3 right-3 bg-emerald-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+            Available
+          </div>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2 group-hover:text-amber-600 transition-colors">
+          The Pragmatic Programmer
+        </h3>
+        <p class="text-slate-600 text-sm mb-3">by David Thomas</p>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-1">
+            <span class="text-amber-400">⭐⭐⭐⭐⭐</span>
+            <span class="text-sm text-slate-600">4.7</span>
+          </div>
+          <div class="text-sm text-slate-500">ISBN: 978-0201616224</div>
+        </div>
+        <button class="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+          📚 Borrow Book
+        </button>
+      </div>
+    </div>
+
+    <!-- Load More -->
+    <div class="text-center mt-12">
+      <button class="px-8 py-4 bg-white/80 backdrop-blur-sm border border-indigo-200 text-indigo-600 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+        🔄 Load More Books
+      </button>
+    </div>
+  </div>
+</div>

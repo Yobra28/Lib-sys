@@ -11,12 +11,14 @@ import { ReturnBookDto } from './dto/return-book.dto';
 import { PayFineDto } from './dto/pay-fine.dto';
 import { UpdateFineConfigurationDto } from './dto/update-fine-configuration.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class BorrowsService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createBorrowDto: CreateBorrowDto) {
@@ -92,6 +94,9 @@ export class BorrowsService {
         status: book.availableCopies - 1 === 0 ? 'BORROWED' : book.status,
       },
     });
+
+    // Send email notification for successful borrow
+    await this.notificationsService.sendBorrowConfirmation(borrow.id);
 
     return borrow;
   }
@@ -228,6 +233,9 @@ export class BorrowsService {
         status: 'AVAILABLE',
       },
     });
+
+    // Send email notification for successful return
+    await this.notificationsService.sendReturnConfirmation(borrow.id);
 
     return {
       ...updatedBorrow,

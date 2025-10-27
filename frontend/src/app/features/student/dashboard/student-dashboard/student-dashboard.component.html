@@ -1,1 +1,158 @@
-<p>student-dashboard works!</p>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
+  <!-- Welcome Header -->
+  <div class="bg-white/80 backdrop-blur-sm border-b border-indigo-100 shadow-sm">
+    <div class="container-app py-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            Welcome back! 👋
+          </h1>
+          <p class="text-slate-600 mt-2">Here's what's happening with your library activities</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="text-sm text-slate-500">Current Time</div>
+            <div class="text-lg font-semibold text-slate-900">{{ currentTime | date:'short' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="container-app py-8">
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-lg hover:shadow-xl transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-indigo-600 text-sm font-medium">📚 Books Borrowed</div>
+            <div class="text-3xl font-bold text-indigo-900 mt-2">3</div>
+          </div>
+          <div class="h-12 w-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center">
+            <span class="text-white text-xl">📖</span>
+          </div>
+        </div>
+        <div class="mt-4 h-2 bg-gradient-to-r from-indigo-300 to-indigo-500 rounded-full"></div>
+      </div>
+
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100 shadow-lg hover:shadow-xl transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-purple-600 text-sm font-medium">🪑 Seat Reserved</div>
+            <div class="text-3xl font-bold text-purple-900 mt-2">1</div>
+          </div>
+          <div class="h-12 w-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
+            <span class="text-white text-xl">🪑</span>
+          </div>
+        </div>
+        <div class="mt-4 h-2 bg-gradient-to-r from-purple-300 to-purple-500 rounded-full"></div>
+      </div>
+
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 shadow-lg hover:shadow-xl transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-emerald-600 text-sm font-medium">⏰ Due Soon</div>
+            <div class="text-3xl font-bold text-emerald-900 mt-2">2</div>
+          </div>
+          <div class="h-12 w-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center">
+            <span class="text-white text-xl">⏰</span>
+          </div>
+        </div>
+        <div class="mt-4 h-2 bg-gradient-to-r from-emerald-300 to-emerald-500 rounded-full"></div>
+      </div>
+
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-amber-100 shadow-lg hover:shadow-xl transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-amber-600 text-sm font-medium">💰 Fines</div>
+            <div class="text-3xl font-bold text-amber-900 mt-2">$0</div>
+          </div>
+          <div class="h-12 w-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
+            <span class="text-white text-xl">💰</span>
+          </div>
+        </div>
+        <div class="mt-4 h-2 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full"></div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid lg:grid-cols-3 gap-8">
+      <!-- Recent Activity -->
+      <div class="lg:col-span-2">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-100 shadow-lg">
+          <h3 class="text-xl font-bold text-slate-900 mb-6">Recent Activity</h3>
+          <div class="space-y-4">
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100">
+              <div class="h-10 w-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <span class="text-white text-sm">📚</span>
+              </div>
+              <div class="flex-1">
+                <div class="font-semibold text-slate-900">Borrowed "Introduction to Algorithms"</div>
+                <div class="text-sm text-slate-600">Due: March 15, 2024</div>
+              </div>
+              <div class="text-xs text-indigo-600 font-medium">2 days ago</div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100">
+              <div class="h-10 w-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span class="text-white text-sm">🪑</span>
+              </div>
+              <div class="flex-1">
+                <div class="font-semibold text-slate-900">Reserved Study Seat #A12</div>
+                <div class="text-sm text-slate-600">Time: 2:00 PM - 5:00 PM</div>
+              </div>
+              <div class="text-xs text-purple-600 font-medium">1 day ago</div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
+              <div class="h-10 w-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
+                <span class="text-white text-sm">✅</span>
+              </div>
+              <div class="flex-1">
+                <div class="font-semibold text-slate-900">Returned "Data Structures"</div>
+                <div class="text-sm text-slate-600">On time, no fines</div>
+              </div>
+              <div class="text-xs text-emerald-600 font-medium">3 days ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div>
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-100 shadow-lg">
+          <h3 class="text-xl font-bold text-slate-900 mb-6">Quick Actions</h3>
+          <div class="space-y-3">
+            <a routerLink="/student/books" class="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 hover:shadow-md transition-all duration-200 group">
+              <div class="h-8 w-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <span class="text-white text-sm">🔍</span>
+              </div>
+              <span class="font-medium text-slate-900">Browse Books</span>
+            </a>
+
+            <a routerLink="/student/seat-reservation" class="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 hover:shadow-md transition-all duration-200 group">
+              <div class="h-8 w-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <span class="text-white text-sm">🪑</span>
+              </div>
+              <span class="font-medium text-slate-900">Reserve Seat</span>
+            </a>
+
+            <a routerLink="/student/my-borrows" class="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 hover:shadow-md transition-all duration-200 group">
+              <div class="h-8 w-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <span class="text-white text-sm">📚</span>
+              </div>
+              <span class="font-medium text-slate-900">My Borrows</span>
+            </a>
+
+            <a routerLink="/student/feedback" class="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 hover:shadow-md transition-all duration-200 group">
+              <div class="h-8 w-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <span class="text-white text-sm">💬</span>
+              </div>
+              <span class="font-medium text-slate-900">Send Feedback</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

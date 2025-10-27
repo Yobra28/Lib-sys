@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { ToastrService } from 'ngx-toastr';
 import { SeatService } from '../../../../core/services/seat.service';
 import { ReservationService } from '../../../../core/services/reservation.service';
@@ -31,7 +32,8 @@ import { Seat } from '../../../../core/models/seat.model';
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatPaginatorModule
   ],
   template: `
     <div class="p-6">
@@ -193,7 +195,7 @@ import { Seat } from '../../../../core/models/seat.model';
       <!-- My Reservations -->
       <mat-card class="mt-6">
         <mat-card-header>
-          <mat-card-title>My Reservations</mat-card-title>
+          <mat-card-title>My Reservations ({{paginationInfo?.total || 0}} total)</mat-card-title>
         </mat-card-header>
         <mat-card-content class="pt-4">
           <div *ngIf="myReservations.length === 0" class="text-center py-8 text-gray-500">
@@ -226,6 +228,35 @@ import { Seat } from '../../../../core/models/seat.model';
               </mat-card-content>
             </mat-card>
           </div>
+
+          <!-- Pagination Controls -->
+          <div *ngIf="paginationInfo && paginationInfo.totalPages > 1" class="mt-6 flex justify-between items-center">
+            <div class="text-sm text-gray-600">
+              Showing {{((paginationInfo.page - 1) * paginationInfo.limit) + 1}} - 
+              {{Math.min(paginationInfo.page * paginationInfo.limit, paginationInfo.total)}} of 
+              {{paginationInfo.total}} reservations
+            </div>
+            
+            <div class="flex gap-2">
+              <button mat-button 
+                      [disabled]="!paginationInfo.hasPrev"
+                      (click)="goToPage(paginationInfo.page - 1)">
+                <mat-icon>chevron_left</mat-icon>
+                Previous
+              </button>
+              
+              <span class="flex items-center px-4 text-sm">
+                Page {{paginationInfo.page}} of {{paginationInfo.totalPages}}
+              </span>
+              
+              <button mat-button 
+                      [disabled]="!paginationInfo.hasNext"
+                      (click)="goToPage(paginationInfo.page + 1)">
+                Next
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
         </mat-card-content>
       </mat-card>
     </div>
@@ -237,6 +268,9 @@ export class SeatReservationComponent implements OnInit {
   filteredSeats: Seat[] = [];
   conflictingReservations: any[] = [];
   myReservations: any[] = [];
+  paginationInfo: any = null;
+  currentPage = 1;
+  pageSize = 5;
   sections: string[] = [];
   selectedSection: string | null = null;
   selectedSeat: Seat | null = null;
@@ -279,10 +313,12 @@ export class SeatReservationComponent implements OnInit {
     });
   }
 
-  loadMyReservations() {
-    this.reservationService.getMyReservations().subscribe({
-      next: (reservations: any[]) => {
-        this.myReservations = reservations;
+  loadMyReservations(page: number = 1) {
+    this.reservationService.getMyReservations(page, this.pageSize).subscribe({
+      next: (response: any) => {
+        this.myReservations = response.reservations;
+        this.paginationInfo = response.pagination;
+        this.currentPage = page;
       }
     });
   }
@@ -384,7 +420,7 @@ export class SeatReservationComponent implements OnInit {
         this.toastr.success('Seat reserved successfully');
         this.reserving = false;
         this.selectedSeat = null;
-        this.loadMyReservations();
+        this.loadMyReservations(this.currentPage);
         this.checkAvailability(); // Refresh available seats
       },
       error: (error: any) => {
@@ -399,12 +435,18 @@ export class SeatReservationComponent implements OnInit {
       this.reservationService.cancel(id).subscribe({
       next: () => {
           this.toastr.success('Reservation cancelled');
-          this.loadMyReservations();
+          this.loadMyReservations(this.currentPage);
         },
         error: (_error: any) => {
           this.toastr.error('Failed to cancel reservation');
         }
       });
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= (this.paginationInfo?.totalPages || 1)) {
+      this.loadMyReservations(page);
     }
   }
 

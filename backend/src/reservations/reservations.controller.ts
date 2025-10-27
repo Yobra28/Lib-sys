@@ -38,9 +38,17 @@ export class ReservationsController {
 
   @Get('my-reservations')
   @Roles(UserRole.STUDENT)
-  @ApiOperation({ summary: 'Get my reservations (Student)' })
-  getMyReservations(@CurrentUser('id') userId: string) {
-    return this.reservationsService.getMyReservations(userId);
+  @ApiOperation({ summary: 'Get my reservations (Student) with pagination' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 5)' })
+  getMyReservations(
+    @CurrentUser('id') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 5;
+    return this.reservationsService.getMyReservations(userId, pageNum, limitNum);
   }
 
   @Get(':id')

@@ -48,38 +48,40 @@ import { Router, RouterLink } from '@angular/router';
 
       <!-- Search and Filter -->
       <div class="mb-6">
-        <div class="search-bar-container">
-          <mat-form-field appearance="none" class="search-field">
-            <mat-label>Search</mat-label>
-            <input matInput (keyup)="applyFilter($event)" placeholder="Title, author, ISBN...">
-            <mat-icon matPrefix>search</mat-icon>
-          </mat-form-field>
+        <mat-card class="search-container-card">
+          <div class="search-bar-container">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search</mat-label>
+              <input matInput (keyup)="applyFilter($event)" placeholder="Title, author, ISBN...">
+              <mat-icon matPrefix>search</mat-icon>
+            </mat-form-field>
 
-          <mat-form-field appearance="none" class="search-field">
-            <mat-label>Category</mat-label>
-            <mat-select (selectionChange)="filterByCategory($event.value)">
-              <mat-option [value]="null">All Categories</mat-option>
-              <mat-option *ngFor="let category of categories" [value]="category">
-                {{category}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Category</mat-label>
+              <mat-select (selectionChange)="filterByCategory($event.value)">
+                <mat-option [value]="null">All Categories</mat-option>
+                <mat-option *ngFor="let category of categories" [value]="category">
+                  {{category}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
 
-          <mat-form-field appearance="none" class="search-field">
-            <mat-label>Status</mat-label>
-            <mat-select (selectionChange)="filterByStatus($event.value)">
-              <mat-option [value]="null">All Status</mat-option>
-              <mat-option value="AVAILABLE">Available</mat-option>
-              <mat-option value="BORROWED">Borrowed</mat-option>
-              <mat-option value="MAINTENANCE">Maintenance</mat-option>
-            </mat-select>
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Status</mat-label>
+              <mat-select (selectionChange)="filterByStatus($event.value)">
+                <mat-option [value]="null">All Status</mat-option>
+                <mat-option value="AVAILABLE">Available</mat-option>
+                <mat-option value="BORROWED">Borrowed</mat-option>
+                <mat-option value="MAINTENANCE">Maintenance</mat-option>
+              </mat-select>
+            </mat-form-field>
 
-          <button mat-raised-button color="accent" (click)="clearFilters()" class="search-button">
-            <mat-icon>clear</mat-icon>
-            Clear Filters
-          </button>
-        </div>
+            <button mat-raised-button color="accent" (click)="clearFilters()" class="search-button">
+              <mat-icon>clear</mat-icon>
+              Clear Filters
+            </button>
+          </div>
+        </mat-card>
       </div>
 
       <!-- Books Table -->
@@ -164,24 +166,49 @@ import { Router, RouterLink } from '@angular/router';
     </div>
   `,
   styles: [`
+    .search-container-card {
+      padding: 12px !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
     .search-bar-container {
       display: flex;
       gap: 0;
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 8px;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      background: transparent;
+      border: none;
+      padding: 0;
+      align-items: flex-start;
+    }
+    
+    /* Remove dividers between search fields */
+    .search-field:not(:last-child)::after {
+      content: none !important;
+      display: none !important;
+    }
+    
+    .search-bar-container .search-field:not(:last-child) {
+      border-right: none !important;
+      margin-right: 0 !important;
     }
 
     .search-field {
       flex: 1;
       margin: 0 !important;
+      padding: 0 8px;
+    }
+    
+    .search-field:first-child {
+      padding-left: 0;
+    }
+    
+    .search-field:last-child {
+      padding-right: 0;
     }
 
     .search-field ::ng-deep .mat-mdc-text-field-wrapper {
       background-color: transparent !important;
       box-shadow: none !important;
+      border: none !important;
     }
 
     .search-field ::ng-deep .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex {
@@ -193,6 +220,7 @@ import { Router, RouterLink } from '@angular/router';
     .search-field ::ng-deep .mdc-notched-outline__notch,
     .search-field ::ng-deep .mdc-notched-outline__trailing {
       border: none !important;
+      border-width: 0 !important;
     }
 
     .search-field:not(:last-child) ::ng-deep .mat-mdc-form-field-subscript-wrapper {
@@ -203,23 +231,65 @@ import { Router, RouterLink } from '@angular/router';
       background-color: transparent !important;
     }
 
+    .search-field ::ng-deep .mat-mdc-input-element {
+      border: none !important;
+      background: transparent !important;
+    }
+
     .search-field ::ng-deep .mat-mdc-input-element:focus {
-      outline: 2px solid #3b82f6;
+      outline: 2px solid #3b82f6 !important;
       outline-offset: -2px;
-      border-radius: 4px;
+      border-radius: 6px;
+      border: none !important;
+    }
+
+    .search-field ::ng-deep .mat-mdc-form-field-icon-prefix {
+      border-right: none !important;
+      border-left: none !important;
+      margin-right: 8px;
+      padding-right: 0 !important;
+    }
+    
+    .search-field ::ng-deep .mat-mdc-form-field-infix {
+      border-left: none !important;
+      border-right: none !important;
+      padding-left: 8px !important;
+    }
+    
+    /* Ensure no divider lines in search bar */
+    .search-bar-container mat-form-field {
+      border-right: none !important;
+      border-left: none !important;
+    }
+    
+    .search-bar-container mat-form-field:not(:last-child) {
+      border-right: none !important;
+      margin-right: 0 !important;
+    }
+
+    .search-field ::ng-deep .mat-icon {
+      color: #6b7280;
     }
 
     .search-button {
-      margin-left: 8px !important;
+      margin-left: 12px !important;
       height: 56px;
-      border-radius: 6px;
+      border-radius: 8px;
+    }
+
+    .search-field ::ng-deep .mat-mdc-select {
+      border: none !important;
+    }
+
+    .search-field ::ng-deep .mat-mdc-select-trigger {
+      border: none !important;
     }
 
     @media (max-width: 768px) {
       .search-bar-container {
         flex-direction: column;
         gap: 8px;
-        padding: 16px;
+        padding: 0;
       }
 
       .search-button {
