@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Welcome back! 👋
+            Welcome back{{ (currentUser?.firstName) ? ', ' + currentUser?.firstName : '' }}! 👋
           </h1>
           <p class="text-slate-600 mt-2">Here's what's happening with your library activities</p>
         </div>
@@ -19,14 +19,21 @@
     </div>
   </div>
 
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="container-app py-8">
+    <div class="flex justify-center items-center h-64">
+      <mat-spinner diameter="60"></mat-spinner>
+    </div>
+  </div>
+
   <!-- Stats Cards -->
-  <div class="container-app py-8">
+  <div class="container-app py-8" *ngIf="!loading">
     <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-lg hover:shadow-xl transition-shadow">
         <div class="flex items-center justify-between">
           <div>
             <div class="text-indigo-600 text-sm font-medium">📚 Books Borrowed</div>
-            <div class="text-3xl font-bold text-indigo-900 mt-2">3</div>
+            <div class="text-3xl font-bold text-indigo-900 mt-2">{{ booksBorrowed }}</div>
           </div>
           <div class="h-12 w-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center">
             <span class="text-white text-xl">📖</span>
@@ -39,7 +46,7 @@
         <div class="flex items-center justify-between">
           <div>
             <div class="text-purple-600 text-sm font-medium">🪑 Seat Reserved</div>
-            <div class="text-3xl font-bold text-purple-900 mt-2">1</div>
+            <div class="text-3xl font-bold text-purple-900 mt-2">{{ seatReservations }}</div>
           </div>
           <div class="h-12 w-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
             <span class="text-white text-xl">🪑</span>
@@ -52,7 +59,7 @@
         <div class="flex items-center justify-between">
           <div>
             <div class="text-emerald-600 text-sm font-medium">⏰ Due Soon</div>
-            <div class="text-3xl font-bold text-emerald-900 mt-2">2</div>
+            <div class="text-3xl font-bold text-emerald-900 mt-2">{{ dueSoon }}</div>
           </div>
           <div class="h-12 w-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center">
             <span class="text-white text-xl">⏰</span>
@@ -65,7 +72,7 @@
         <div class="flex items-center justify-between">
           <div>
             <div class="text-amber-600 text-sm font-medium">💰 Fines</div>
-            <div class="text-3xl font-bold text-amber-900 mt-2">$0</div>
+            <div class="text-3xl font-bold text-amber-900 mt-2">${{ totalFines.toFixed(2) }}</div>
           </div>
           <div class="h-12 w-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
             <span class="text-white text-xl">💰</span>
@@ -81,40 +88,45 @@
       <div class="lg:col-span-2">
         <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-100 shadow-lg">
           <h3 class="text-xl font-bold text-slate-900 mb-6">Recent Activity</h3>
-          <div class="space-y-4">
-            <div class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100">
-              <div class="h-10 w-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center">
-                <span class="text-white text-sm">📚</span>
+          
+          <div class="space-y-4" *ngIf="recentActivity.length > 0; else noActivity">
+            <!-- Borrow Activity -->
+            <div *ngFor="let activity of recentActivity" 
+                 class="flex items-center gap-4 p-4 rounded-xl border"
+                 [ngClass]="{
+                   'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100': activity.type === 'borrow',
+                   'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-100': activity.type === 'reservation',
+                   'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100': activity.type === 'return'
+                 }">
+              <div class="h-10 w-10 rounded-full flex items-center justify-center"
+                   [ngClass]="{
+                     'bg-gradient-to-br from-indigo-500 to-indigo-600': activity.type === 'borrow',
+                     'bg-gradient-to-br from-purple-500 to-purple-600': activity.type === 'reservation',
+                     'bg-gradient-to-br from-emerald-500 to-emerald-600': activity.type === 'return'
+                   }">
+                <span class="text-white text-sm">{{ activity.type === 'borrow' ? '📚' : activity.type === 'reservation' ? '🪑' : '✅' }}</span>
               </div>
               <div class="flex-1">
-                <div class="font-semibold text-slate-900">Borrowed "Introduction to Algorithms"</div>
-                <div class="text-sm text-slate-600">Due: March 15, 2024</div>
+                <div class="font-semibold text-slate-900">{{ activity.title }}</div>
+                <div class="text-sm text-slate-600">{{ activity.subtitle }}</div>
               </div>
-              <div class="text-xs text-indigo-600 font-medium">2 days ago</div>
-            </div>
-
-            <div class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100">
-              <div class="h-10 w-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span class="text-white text-sm">🪑</span>
+              <div class="text-xs font-medium"
+                   [ngClass]="{
+                     'text-indigo-600': activity.type === 'borrow',
+                     'text-purple-600': activity.type === 'reservation',
+                     'text-emerald-600': activity.type === 'return'
+                   }">
+                {{ activity.time }}
               </div>
-              <div class="flex-1">
-                <div class="font-semibold text-slate-900">Reserved Study Seat #A12</div>
-                <div class="text-sm text-slate-600">Time: 2:00 PM - 5:00 PM</div>
-              </div>
-              <div class="text-xs text-purple-600 font-medium">1 day ago</div>
-            </div>
-
-            <div class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
-              <div class="h-10 w-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
-                <span class="text-white text-sm">✅</span>
-              </div>
-              <div class="flex-1">
-                <div class="font-semibold text-slate-900">Returned "Data Structures"</div>
-                <div class="text-sm text-slate-600">On time, no fines</div>
-              </div>
-              <div class="text-xs text-emerald-600 font-medium">3 days ago</div>
             </div>
           </div>
+          
+          <ng-template #noActivity>
+            <div class="text-center py-8 text-slate-500">
+              <span class="text-4xl">📭</span>
+              <p class="mt-4">No recent activity</p>
+            </div>
+          </ng-template>
         </div>
       </div>
 

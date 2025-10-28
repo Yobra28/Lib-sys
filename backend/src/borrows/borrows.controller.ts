@@ -21,6 +21,7 @@ import { ReturnBookDto } from './dto/return-book.dto';
 import { SelfBorrowDto } from './dto/self-borrow.dto';
 import { PayFineDto } from './dto/pay-fine.dto';
 import { UpdateFineConfigurationDto } from './dto/update-fine-configuration.dto';
+import { RenewBorrowDto } from './dto/renew-borrow.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
@@ -84,8 +85,8 @@ export class BorrowsController {
 
   @Patch(':id/renew')
   @ApiOperation({ summary: 'Renew borrowed book' })
-  renewBook(@Param('id') id: string) {
-    return this.borrowsService.renewBook(id);
+  renewBook(@Param('id') id: string, @Body() renewDto: RenewBorrowDto) {
+    return this.borrowsService.renewBook(id, renewDto.duration);
   }
 
   @Post('pay-fine')

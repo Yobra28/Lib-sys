@@ -5,14 +5,30 @@ import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface SystemSettings {
+  libraryName?: string;
+  fineRatePerDay?: number;
+  borrowLimit?: number;
+  reservationLimit?: number;
+  maxBorrowingDays?: number;
+  maxRenewals?: number;
+  renewalDays?: number;
+  notificationEmailEnabled?: boolean;
+  autoApproveReservations?: boolean;
+  maintenanceMode?: boolean;
   [key: string]: any;
 }
 
 const DEFAULT_SETTINGS: SystemSettings = {
   libraryName: 'Smart Library',
-  fineRatePerDay: 0,
+  fineRatePerDay: 50,
   borrowLimit: 3,
-  reservationLimit: 1
+  reservationLimit: 1,
+  maxBorrowingDays: 14,
+  maxRenewals: 3,
+  renewalDays: 7,
+  notificationEmailEnabled: true,
+  autoApproveReservations: false,
+  maintenanceMode: false
 };
 
 @Injectable({ providedIn: 'root' })
@@ -21,18 +37,10 @@ export class SettingsService {
   constructor(private http: HttpClient) {}
 
   get(): Observable<SystemSettings> {
-    return this.http.get<SystemSettings>(this.apiUrl).pipe(
-      catchError(err => {
-        // If the API endpoint doesn't exist yet, gracefully fall back to defaults
-        if (err.status === 404) return of({ ...DEFAULT_SETTINGS });
-        return of({ ...DEFAULT_SETTINGS });
-      })
-    );
+    return this.http.get<SystemSettings>(this.apiUrl);
   }
 
   update(data: Partial<SystemSettings>): Observable<SystemSettings> {
-    return this.http.patch<SystemSettings>(this.apiUrl, data).pipe(
-      catchError(() => of({ ...(data as SystemSettings) }))
-    );
+    return this.http.patch<SystemSettings>(this.apiUrl, data);
   }
 }

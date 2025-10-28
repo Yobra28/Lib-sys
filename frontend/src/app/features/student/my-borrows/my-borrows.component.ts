@@ -1,14 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
-import { BorrowService } from '../../../core/services/borrow.service';
+import { BorrowService, BorrowDuration } from '../../../core/services/borrow.service';
 import { Borrow, Fine } from '../../../core/models/borrow.model';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-my-borrows',
@@ -20,7 +23,10 @@ import { Borrow, Fine } from '../../../core/models/borrow.model';
     MatIconModule,
     MatChipsModule,
     MatDialogModule,
-    MatProgressSpinnerModule
+    MatFormFieldModule,
+    MatSelectModule,
+    MatProgressSpinnerModule,
+    ReactiveFormsModule
   ],
   template: `
     <div class="p-6">
@@ -89,15 +95,27 @@ import { Borrow, Fine } from '../../../core/models/borrow.model';
                   </div>
                 </div>
 
+                <!-- Renewal Info -->
+                <div *ngIf="!canRenew(borrow).allowed && borrow.status === 'ACTIVE'" 
+                     class="bg-amber-50 p-4 rounded-lg mb-4 border border-amber-200">
+                  <div class="flex items-center gap-2 mb-2">
+                    <mat-icon class="text-amber-500">info</mat-icon>
+                    <span class="font-semibold text-amber-800">Renewal Available Soon</span>
+                  </div>
+                  <p class="text-sm text-amber-700">
+                    You can renew this book 1 day before the due date. {{canRenew(borrow).message}}
+                  </p>
+                </div>
+
                 <!-- Overdue Warning -->
                 <div *ngIf="isOverdue(borrow) && (!borrow.fines || borrow.fines.length === 0)" 
-                     class="bg-orange-50 p-4 rounded-lg mb-4">
+                     class="bg-blue-50 p-4 rounded-lg mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <mat-icon class="text-orange-500">schedule</mat-icon>
-                    <span class="font-semibold text-orange-800">Overdue Notice</span>
+                    <mat-icon class="text-blue-500">schedule</mat-icon>
+                    <span class="font-semibold text-blue-800">Overdue - Auto-Pay Available</span>
                   </div>
-                  <p class="text-sm text-orange-700">
-                    This book is overdue. A fine will be calculated when you return it.
+                  <p class="text-sm text-blue-700">
+                    This book is overdue. Fines will be automatically calculated and paid when you return it.
                     Current fine rate: ₹50 per day.
                   </p>
                 </div>
@@ -106,21 +124,12 @@ import { Borrow, Fine } from '../../../core/models/borrow.model';
               <!-- Action Buttons -->
               <div class="flex flex-col gap-2 ml-4">
                 <button 
-                  *ngIf="borrow.status === 'ACTIVE' && !hasPendingFines(borrow)"
+                  *ngIf="borrow.status === 'ACTIVE'"
                   mat-raised-button 
-                  color="primary"
+                  [color]="hasPendingFines(borrow) ? 'warn' : 'primary'"
                   (click)="returnBook(borrow)">
                   <mat-icon>keyboard_return</mat-icon>
-                  Return Book
-                </button>
-                
-                <button 
-                  *ngIf="hasPendingFines(borrow)"
-                  mat-raised-button 
-                  color="warn"
-                  (click)="payFines(borrow)">
-                  <mat-icon>payment</mat-icon>
-                  Pay Fines
+                  {{hasPendingFines(borrow) ? 'Return (Auto-pay fines)' : 'Return Book'}}
                 </button>
 
                 <button 
@@ -128,7 +137,7 @@ import { Borrow, Fine } from '../../../core/models/borrow.model';
                   mat-button
                   (click)="renewBook(borrow)">
                   <mat-icon>refresh</mat-icon>
-                  Renew
+                  {{canRenew(borrow).allowed ? 'Renew' : 'Renew (Not Yet)'}}
                 </button>
               </div>
             </div>
@@ -211,8 +220,17 @@ export class MyBorrowsComponent implements OnInit {
   returnBook(borrow: Borrow) {
     if (confirm(`Are you sure you want to return "${borrow.book?.title}"?`)) {
     this.borrowService.returnBook(borrow.id).subscribe({
-        next: () => {
+        next: (response: any) => {
+          // Check if automatic fine was paid
+          if (response.automaticFinePaid) {
+            this.toastr.success(
+              response.automaticFinePaid.message,
+              'Book returned with automatic fine payment',
+              { timeOut: 5000 }
+            );
+          } else {
           this.toastr.success('Book returned successfully');
+          }
           this.loadBorrows();
         },
         error: (error: any) => {
@@ -222,13 +240,50 @@ export class MyBorrowsComponent implements OnInit {
   }
 }
 
-  payFines(borrow: Borrow) {
-    // Open fine payment dialog
-    this.toastr.info('Fine payment feature coming soon');
+
+  canRenew(borrow: Borrow): { allowed: boolean; message?: string; daysUntil?: number } {
+    if (borrow.status !== 'ACTIVE') {
+      return { allowed: false, message: 'Only active borrows can be renewed' };
+    }
+
+    const now = new Date();
+    const dueDate = new Date(borrow.dueDate);
+    
+    // Normalize to midnight for date-only comparison
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const dueDateDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate()).getTime();
+    const oneDayBeforeDueDate = dueDateDate - (24 * 60 * 60 * 1000);
+    
+    // Check if renewal is allowed (only on or 1 day before due date)
+    if (nowDate < oneDayBeforeDueDate) {
+      const daysUntilRenewalAllowed = Math.ceil((oneDayBeforeDueDate - nowDate) / (1000 * 60 * 60 * 24));
+      const renewalDate = new Date(oneDayBeforeDueDate);
+      return { 
+        allowed: false, 
+        message: `You can renew starting ${renewalDate.toLocaleDateString()}`,
+        daysUntil: daysUntilRenewalAllowed
+      };
+    }
+
+    return { allowed: true };
   }
 
   renewBook(borrow: Borrow) {
-    this.borrowService.renewBook(borrow.id).subscribe({
+    const renewCheck = this.canRenew(borrow);
+    
+    if (!renewCheck.allowed) {
+      this.toastr.warning(renewCheck.message || 'Renewal not allowed yet');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(RenewBookDialogComponent, {
+      width: '400px',
+      data: { bookTitle: borrow.book?.title, dueDate: borrow.dueDate }
+    });
+
+    dialogRef.afterClosed().subscribe(duration => {
+      if (duration) {
+        this.borrowService.renewBook(borrow.id, duration).subscribe({
       next: () => {
         this.toastr.success('Book renewed successfully');
         this.loadBorrows();
@@ -237,5 +292,62 @@ export class MyBorrowsComponent implements OnInit {
         this.toastr.error(error.error?.message || 'Failed to renew book');
       }
     });
+      }
+    });
+  }
+}
+
+// Renew Book Dialog Component
+@Component({
+  selector: 'app-renew-book-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatButtonModule,
+    ReactiveFormsModule
+  ],
+  template: `
+    <div class="p-6">
+      <h2 class="text-xl font-bold mb-4">Renew Book</h2>
+      <p class="text-gray-600 mb-4">Extend the due date for <strong>{{data.bookTitle}}</strong></p>
+      
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Select Renewal Duration</mat-label>
+        <mat-select [formControl]="durationControl">
+          <mat-option [value]="BorrowDuration.THREE_DAYS">3 Days</mat-option>
+          <mat-option [value]="BorrowDuration.FIVE_DAYS">5 Days</mat-option>
+          <mat-option [value]="BorrowDuration.ONE_WEEK">1 Week</mat-option>
+          <mat-option [value]="BorrowDuration.TWO_WEEKS">2 Weeks</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="mt-4 text-sm text-gray-600">
+        <p>Current due date: {{data.dueDate | date:'medium'}}</p>
+        <p class="font-semibold text-blue-600 mt-2">New due date will be {{data.dueDate | date:'medium'}} + selected duration</p>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-6">
+        <button mat-button (click)="dialogRef.close()">Cancel</button>
+        <button mat-raised-button color="primary" (click)="confirm()" [disabled]="!durationControl.value">
+          Confirm Renewal
+        </button>
+      </div>
+    </div>
+  `
+})
+export class RenewBookDialogComponent {
+  BorrowDuration = BorrowDuration;
+  durationControl = new FormControl(BorrowDuration.TWO_WEEKS);
+
+  constructor(
+    public dialogRef: MatDialogRef<RenewBookDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
+
+  confirm() {
+    this.dialogRef.close(this.durationControl.value);
   }
 }

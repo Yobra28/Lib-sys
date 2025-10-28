@@ -119,18 +119,6 @@ import { Fine } from '../../../../core/models/fine.model';
               </td>
             </ng-container>
 
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>Actions</th>
-              <td mat-cell *matCellDef="let fine">
-                <button mat-raised-button color="primary" 
-                        *ngIf="fine.status === 'PENDING'"
-                        size="small">
-                  Contact Admin
-                </button>
-              </td>
-            </ng-container>
-
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50"></tr>
           </table>
@@ -166,7 +154,7 @@ export class MyFinesComponent implements OnInit {
   pendingFines = 0;
   paidFines = 0;
 
-  displayedColumns = ['book', 'reason', 'amount', 'date', 'status', 'actions'];
+  displayedColumns = ['book', 'reason', 'amount', 'date', 'status'];
 
   constructor(
     private fineService: FineService,

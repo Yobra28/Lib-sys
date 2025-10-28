@@ -7,7 +7,7 @@
       </div>
       <div>
         <div class="font-semibold text-slate-800 leading-tight">Smart Library</div>
-        <div class="text-xs text-slate-500 -mt-0.5">Admin</div>
+        <div class="text-xs text-slate-500 -mt-0.5">{{ getUserRoleDisplay() }}</div>
       </div>
     </div>
   </div>
@@ -43,6 +43,10 @@
         <mat-icon matListItemIcon class="text-fuchsia-600">feedback</mat-icon>
         <span matListItemTitle>Feedback</span>
       </a>
+      <a mat-list-item routerLink="/admin/users" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-purple-600">people</mat-icon>
+        <span matListItemTitle>Users</span>
+      </a>
       <a mat-list-item routerLink="/admin/reports" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
         <mat-icon matListItemIcon class="text-teal-600">assessment</mat-icon>
         <span matListItemTitle>Reports</span>
@@ -55,6 +59,10 @@
 
     <!-- Student Menu -->
     <ng-template #studentMenu>
+      <a mat-list-item routerLink="/student/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
+        <mat-icon matListItemIcon class="text-sky-600">dashboard</mat-icon>
+        <span matListItemTitle>Dashboard</span>
+      </a>
       <a mat-list-item routerLink="/student/books" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
         <mat-icon matListItemIcon class="text-emerald-600">book</mat-icon>
         <span matListItemTitle>Browse Books</span>

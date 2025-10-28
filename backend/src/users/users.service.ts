@@ -75,7 +75,11 @@ export class UsersService {
    * Get all users with optional filters and pagination
    */
   async findAll(filterDto?: FilterUserDto) {
-    const { search, role, isActive, page = 1, limit = 10 } = filterDto || {};
+    const { search, role, isActive, page: pageRaw = 1, limit: limitRaw = 10 } = filterDto || {};
+
+    // Ensure page and limit are numbers
+    const page = typeof pageRaw === 'string' ? parseInt(pageRaw, 10) : pageRaw;
+    const limit = typeof limitRaw === 'string' ? parseInt(limitRaw, 10) : limitRaw;
 
     const where: any = {};
 
@@ -125,13 +129,8 @@ export class UsersService {
     });
 
     return {
-      data: users,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+      users,
+      total,
     };
   }
 

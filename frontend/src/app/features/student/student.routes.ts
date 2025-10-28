@@ -46,7 +46,7 @@ export const STUDENT_ROUTES: Routes = [
         loadComponent: () => import('./profile/profile.component')
           .then(m => m.ProfileComponent)
       },
-      { path: '', pathMatch: 'full', redirectTo: 'books' }
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' }
     ]
   }
 ];

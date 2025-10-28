@@ -279,6 +279,7 @@ export class SeatReservationComponent implements OnInit {
   searchPerformed = false;
   minDate = new Date();
   totalSeats = 0;
+  Math = Math; // Expose Math to template
 
   // Fixed time slots
   readonly slots = [

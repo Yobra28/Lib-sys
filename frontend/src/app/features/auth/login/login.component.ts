@@ -107,7 +107,7 @@ export class LoginComponent {
           if (response.user.role === UserRole.ADMIN || response.user.role === UserRole.LIBRARIAN) {
             this.router.navigate(['/admin/dashboard']);
           } else {
-            this.router.navigate(['/student/books']);
+            this.router.navigate(['/student/dashboard']);
           }
         },
         error: (error) => {

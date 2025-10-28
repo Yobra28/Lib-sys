@@ -34,5 +34,11 @@ export class SidebarComponent implements OnInit {
     });
   }
 
+  getUserRoleDisplay(): string {
+    if (!this.user?.role) return 'Student';
+    // Convert ADMIN, LIBRARIAN, STUDENT to Admin, Librarian, Student
+    return this.user.role.charAt(0) + this.user.role.slice(1).toLowerCase();
+  }
+
   logout() { this.authService.logout(); }
 }

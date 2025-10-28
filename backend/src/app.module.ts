@@ -13,6 +13,7 @@ import { FinesModule } from './fines/fines.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ReportsModule } from './reports/reports.module';
+import { SettingsModule } from './settings/settings.module';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
@@ -31,6 +32,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     FeedbackModule,
     NotificationsModule,
     ReportsModule,
+    SettingsModule,
     PrismaModule,
     CloudinaryModule,
   ],

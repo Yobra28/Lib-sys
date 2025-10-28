@@ -66,6 +66,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./settings/settings.component')
           .then(m => m.SettingsComponent)
       },
+      {
+        path: 'users',
+        loadComponent: () => import('./users/users-list/users-list.component')
+          .then(m => m.UsersListComponent)
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' }
     ]
   }

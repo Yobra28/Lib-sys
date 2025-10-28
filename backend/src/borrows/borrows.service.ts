@@ -163,45 +163,78 @@ export class BorrowsService {
       throw new BadRequestException('Book already returned');
     }
 
-    // Check if there are any pending fines that need to be paid
-    const pendingFines = await this.prisma.fine.findMany({
-      where: {
-        borrowId: borrow.id,
-        status: 'PENDING'
-      }
-    });
-
-    if (pendingFines.length > 0) {
-      const totalPendingAmount = pendingFines.reduce((sum, fine) => sum + fine.amount, 0);
-      throw new BadRequestException(
-        `Cannot return book. Please pay pending fine of ${totalPendingAmount} first.`
-      );
-    }
-
     const returnDate = new Date();
     const dueDate = new Date(borrow.dueDate);
     const isOverdue = returnDate > dueDate;
 
-    // Calculate fine if overdue
+    // For student self-returns: Automatically handle fines
+    const isStudentReturn = !!userId;
     let fine: any = null;
+
     if (isOverdue) {
       const daysOverdue = Math.ceil((returnDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
       const dailyRate = await this.getCurrentFineRate();
       const fineAmount = daysOverdue * dailyRate;
 
-      fine = await this.prisma.fine.create({
-        data: {
-          userId: borrow.userId,
+      if (isStudentReturn) {
+        // For student returns: Automatically create and pay the fine
+        fine = await this.prisma.fine.create({
+          data: {
+            userId: borrow.userId,
+            borrowId: borrow.id,
+            amount: fineAmount,
+            reason: `Overdue by ${daysOverdue} day(s)`,
+            status: 'PAID', // Automatically mark as paid
+            paidDate: returnDate,
+          },
+        });
+      } else {
+        // For admin/librarian returns: Create fine and block return
+        fine = await this.prisma.fine.create({
+          data: {
+            userId: borrow.userId,
+            borrowId: borrow.id,
+            amount: fineAmount,
+            reason: `Overdue by ${daysOverdue} day(s)`,
+          },
+        });
+
+        // Block return for admin/librarian until manual payment
+        throw new BadRequestException(
+          `Book is overdue by ${daysOverdue} day(s). Please pay fine of ${fineAmount} before returning.`
+        );
+      }
+    } else {
+      // Check if there are any pending fines for non-overdue returns
+      const pendingFines = await this.prisma.fine.findMany({
+        where: {
           borrowId: borrow.id,
-          amount: fineAmount,
-          reason: `Overdue by ${daysOverdue} day(s)`,
-        },
+          status: 'PENDING'
+        }
       });
 
-      // If fine is created, prevent return until paid
-      throw new BadRequestException(
-        `Book is overdue by ${daysOverdue} day(s). Please pay fine of ${fineAmount} before returning.`
-      );
+      if (pendingFines.length > 0) {
+        const totalPendingAmount = pendingFines.reduce((sum, fine) => sum + fine.amount, 0);
+        
+        if (isStudentReturn) {
+          // For student returns: Automatically pay all pending fines
+          await this.prisma.fine.updateMany({
+            where: {
+              borrowId: borrow.id,
+              status: 'PENDING'
+            },
+            data: {
+              status: 'PAID',
+              paidDate: returnDate,
+            }
+          });
+        } else {
+          // For admin/librarian: Block return
+          throw new BadRequestException(
+            `Cannot return book. Please pay pending fine of ${totalPendingAmount} first.`
+          );
+        }
+      }
     }
 
     // Update borrow record
@@ -237,13 +270,25 @@ export class BorrowsService {
     // Send email notification for successful return
     await this.notificationsService.sendReturnConfirmation(borrow.id);
 
-    return {
+    // If student returned with automatic fine payment, add it to response
+    const response: any = {
       ...updatedBorrow,
-      fine,
     };
+
+    if (fine && isStudentReturn) {
+      response.automaticFinePaid = {
+        amount: fine.amount,
+        reason: fine.reason,
+        status: fine.status,
+        paidDate: fine.paidDate,
+        message: `Book returned successfully. A fine of ${fine.amount} was automatically paid for late return.`
+      };
+    }
+
+    return response;
   }
 
-  async renewBook(id: string) {
+  async renewBook(id: string, duration: BorrowDuration) {
     const borrow = await this.findOne(id);
 
     if (borrow.status !== 'ACTIVE') {
@@ -256,8 +301,29 @@ export class BorrowsService {
       throw new BadRequestException(`Maximum renewals (${maxRenewals}) reached`);
     }
 
-    const defaultDuration = this.configService.get('borrow.defaultDurationDays') || 14; // Default to 14 days
-    const newDueDate = new Date(borrow.dueDate.getTime() + defaultDuration * 24 * 60 * 60 * 1000);
+    // Check if renewal is allowed (only 1 day before due date)
+    const now = new Date();
+    const dueDate = new Date(borrow.dueDate);
+    
+    // Normalize to midnight for date-only comparison
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const dueDateDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate()).getTime();
+    const oneDayBeforeDueDate = dueDateDate - (24 * 60 * 60 * 1000);
+    
+    // Only allow renewal on or 1 day before the due date
+    if (nowDate < oneDayBeforeDueDate) {
+      const daysUntilRenewalAllowed = Math.ceil((oneDayBeforeDueDate - nowDate) / (1000 * 60 * 60 * 24));
+      const renewalDate = new Date(oneDayBeforeDueDate);
+      throw new BadRequestException(
+        `You can only renew 1 day before the due date. Please renew on ${renewalDate.toLocaleDateString()} (in ${daysUntilRenewalAllowed} day(s))`
+      );
+    }
+
+    // Calculate renewal duration in days from the chosen duration
+    const renewalDays = this.getDurationInDays(duration);
+    
+    // New due date = current due date + renewal duration
+    const newDueDate = new Date(dueDate.getTime() + renewalDays * 24 * 60 * 60 * 1000);
 
     return this.prisma.borrow.update({
       where: { id },

@@ -65,8 +65,8 @@ export class BorrowService {
     return this.http.patch<Borrow>(`${this.apiUrl}/${id}/return-self`, { notes });
   }
 
-  renewBook(id: string): Observable<Borrow> {
-    return this.http.patch<Borrow>(`${this.apiUrl}/${id}/renew`, {});
+  renewBook(id: string, duration: BorrowDuration): Observable<Borrow> {
+    return this.http.patch<Borrow>(`${this.apiUrl}/${id}/renew`, { duration });
   }
 
   payFine(data: PayFineRequest): Observable<any> {
