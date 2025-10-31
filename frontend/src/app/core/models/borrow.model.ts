@@ -21,6 +21,7 @@ export interface Borrow {
     firstName: string;
     lastName: string;
     email: string;
+    regno?: string;
   };
   fines?: Fine[];
 }

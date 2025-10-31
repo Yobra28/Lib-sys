@@ -68,14 +68,7 @@ import { Seat } from '../../../../core/models/seat.model';
               </mat-form-field>
             </div>
 
-            <div class="mt-4">
-              <button mat-raised-button color="primary" 
-                      [disabled]="reservationForm.invalid || checking"
-                      (click)="checkAvailability()">
-                <mat-icon>search</mat-icon>
-                Check Availability
-              </button>
-            </div>
+            
           </form>
         </mat-card-content>
       </mat-card>
@@ -296,7 +289,7 @@ export class SeatReservationComponent implements OnInit {
     private toastr: ToastrService
   ) {
     this.reservationForm = this.fb.group({
-      reservationDate: ['', Validators.required],
+      reservationDate: [new Date(), Validators.required],
       slot: [this.slots[0].label, Validators.required]
     });
   }
@@ -304,6 +297,13 @@ export class SeatReservationComponent implements OnInit {
   ngOnInit() {
     this.loadMyReservations();
     this.loadSections();
+    // Auto-check availability on init and on changes
+    this.checkAvailability();
+    this.reservationForm.valueChanges.subscribe(() => {
+      if (!this.checking && this.reservationForm.valid) {
+        this.checkAvailability();
+      }
+    });
   }
 
   loadSections() {

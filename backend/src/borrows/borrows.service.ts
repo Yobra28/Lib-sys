@@ -118,6 +118,7 @@ export class BorrowsService {
             firstName: true,
             lastName: true,
             email: true,
+            regno: true,
           },
         },
         fines: true,

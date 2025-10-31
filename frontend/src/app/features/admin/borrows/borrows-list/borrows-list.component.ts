@@ -36,7 +36,7 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
   templateUrl: './borrows-list.component.html'
 })
 export class BorrowsListComponent implements OnInit {
-  displayedColumns: string[] = ['user', 'book', 'dueDate', 'status'];
+  displayedColumns: string[] = ['name', 'regno', 'email', 'book', 'dueDate', 'status'];
   dataSource = new MatTableDataSource<Borrow>([]);
   loading = false;
 
