@@ -18,6 +18,7 @@ export class ReportsService {
       activeBorrows,
       totalSeats,
       pendingFines,
+      totalFines,
       overdueBooks,
     ] = await Promise.all([
       this.prisma.book.count(),
@@ -26,6 +27,9 @@ export class ReportsService {
       this.prisma.seat.count(),
       this.prisma.fine.aggregate({
         where: { status: 'PENDING' },
+        _sum: { amount: true },
+      }),
+      this.prisma.fine.aggregate({
         _sum: { amount: true },
       }),
       this.prisma.borrow.count({ where: { status: 'OVERDUE' } }),
@@ -37,8 +41,190 @@ export class ReportsService {
       activeBorrows,
       totalSeats,
       pendingFinesAmount: pendingFines._sum.amount || 0,
+      totalFinesAmount: totalFines._sum.amount || 0,
       overdueBooks,
     };
+  }
+
+  async getFinesTimeseries(months: number = 6) {
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - (months - 1));
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+
+    const fines = await this.prisma.fine.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      select: { amount: true, status: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const buckets: { [key: string]: { month: string; paid: number; pending: number; total: number } } = {};
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      const key = `${cursor.getFullYear()}-${(cursor.getMonth() + 1).toString().padStart(2, '0')}`;
+      buckets[key] = { month: key, paid: 0, pending: 0, total: 0 };
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    for (const f of fines) {
+      const d = new Date(f.createdAt);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      const bucket = buckets[key];
+      if (!bucket) continue;
+      if (f.status === 'PAID') bucket.paid += f.amount || 0;
+      else bucket.pending += f.amount || 0;
+      bucket.total += f.amount || 0;
+    }
+
+    return Object.values(buckets);
+  }
+
+  async getBorrowStatusTimeseries(months: number = 6) {
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - (months - 1));
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+
+    const borrows = await this.prisma.borrow.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      select: { status: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const buckets: { [key: string]: { month: string; active: number; overdue: number; returned: number } } = {};
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      const key = `${cursor.getFullYear()}-${(cursor.getMonth() + 1).toString().padStart(2, '0')}`;
+      buckets[key] = { month: key, active: 0, overdue: 0, returned: 0 };
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    for (const b of borrows) {
+      const d = new Date(b.createdAt);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      const bucket = buckets[key];
+      if (!bucket) continue;
+      if (b.status === 'ACTIVE') bucket.active += 1;
+      else if (b.status === 'OVERDUE') bucket.overdue += 1;
+      else if (b.status === 'RETURNED') bucket.returned += 1;
+    }
+
+    return Object.values(buckets);
+  }
+
+  async getSeatHeatmap(days: number = 7) {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - (days - 1));
+    start.setHours(0, 0, 0, 0);
+
+    const reservations = await this.prisma.seatReservation.findMany({
+      where: {
+        createdAt: { gte: start, lte: end },
+        status: { in: ['APPROVED', 'COMPLETED'] },
+      },
+      select: { createdAt: true },
+    });
+
+    // Build heatmap: rows=hours[0..23], cols=days (YYYY-MM-DD)
+    const dayKeys: string[] = [];
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      dayKeys.push(cursor.toISOString().slice(0, 10));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    const matrix: { [hour: number]: { [day: string]: number } } = {};
+    for (let h = 0; h < 24; h++) {
+      matrix[h] = {};
+      for (const day of dayKeys) matrix[h][day] = 0;
+    }
+
+    for (const r of reservations) {
+      const d = new Date(r.createdAt);
+      const day = d.toISOString().slice(0, 10);
+      const hour = d.getHours();
+      if (matrix[hour] && matrix[hour][day] !== undefined) {
+        matrix[hour][day] += 1;
+      }
+    }
+
+    return { days: dayKeys, hours: Array.from({ length: 24 }, (_, i) => i), data: matrix };
+  }
+
+  async getSystemLogs(limit: number = 50) {
+    // Collect recent changes across key entities and normalize
+    const [
+      users,
+      borrows,
+      fines,
+      reservations,
+      books,
+    ] = await Promise.all([
+      this.prisma.user.findMany({
+        select: { id: true, email: true, firstName: true, lastName: true, createdAt: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+      }),
+      this.prisma.borrow.findMany({
+        select: { id: true, status: true, createdAt: true, updatedAt: true, userId: true, bookId: true, dueDate: true },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+      }),
+      this.prisma.fine.findMany({
+        select: { id: true, status: true, amount: true, createdAt: true, updatedAt: true, userId: true },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+      }),
+      this.prisma.seatReservation.findMany({
+        select: { id: true, status: true, createdAt: true, updatedAt: true, userId: true, seatId: true, startTime: true },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+      }),
+      this.prisma.book.findMany({
+        select: { id: true, title: true, author: true, createdAt: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+      }),
+    ]);
+
+    const entries: Array<{ timestamp: Date; type: string; message: string; ref: string }> = [];
+
+    for (const u of users) {
+      entries.push({ timestamp: u.createdAt, type: 'USER_CREATED', message: `User created: ${u.firstName} ${u.lastName} (${u.email})`, ref: u.id });
+      if (u.updatedAt && u.updatedAt.getTime() !== u.createdAt.getTime()) {
+        entries.push({ timestamp: u.updatedAt, type: 'USER_UPDATED', message: `User updated: ${u.firstName} ${u.lastName} (${u.email})`, ref: u.id });
+      }
+    }
+    for (const b of borrows) {
+      entries.push({ timestamp: b.createdAt, type: 'BORROW_CREATED', message: `Borrow created: ${b.id} (status ${b.status})`, ref: b.id });
+      if (b.updatedAt && b.updatedAt.getTime() !== b.createdAt.getTime()) {
+        entries.push({ timestamp: b.updatedAt, type: 'BORROW_UPDATED', message: `Borrow updated to ${b.status}`, ref: b.id });
+      }
+    }
+    for (const f of fines) {
+      entries.push({ timestamp: f.createdAt, type: 'FINE_CREATED', message: `Fine created: ${f.amount} (${f.status})`, ref: f.id });
+      if (f.updatedAt && f.updatedAt.getTime() !== f.createdAt.getTime()) {
+        entries.push({ timestamp: f.updatedAt, type: 'FINE_UPDATED', message: `Fine updated: ${f.amount} (${f.status})`, ref: f.id });
+      }
+    }
+    for (const r of reservations) {
+      entries.push({ timestamp: r.createdAt, type: 'RESERVATION_CREATED', message: `Reservation created: ${r.id} (${r.status})`, ref: r.id });
+      if (r.updatedAt && r.updatedAt.getTime() !== r.createdAt.getTime()) {
+        entries.push({ timestamp: r.updatedAt, type: 'RESERVATION_UPDATED', message: `Reservation updated to ${r.status}`, ref: r.id });
+      }
+    }
+    for (const book of books) {
+      entries.push({ timestamp: book.createdAt, type: 'BOOK_CREATED', message: `Book added: ${book.title} by ${book.author}`, ref: book.id });
+      if (book.updatedAt && book.updatedAt.getTime() !== book.createdAt.getTime()) {
+        entries.push({ timestamp: book.updatedAt, type: 'BOOK_UPDATED', message: `Book updated: ${book.title}`, ref: book.id });
+      }
+    }
+
+    entries.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return entries.slice(0, limit);
   }
 
   async getMostBorrowedBooks(limit: number = 10) {

@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { SettingsService, SystemSettings } from '../../../core/services/settings.service';
@@ -14,7 +15,7 @@ import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-admin-settings',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatTableModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, ReactiveFormsModule],
+  imports: [CommonModule, MatCardModule, MatTableModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, ReactiveFormsModule, MatPaginatorModule],
   template: `
   <div class="p-6 space-y-4">
     <div class="page-header">
@@ -108,7 +109,7 @@ import { ToastrService } from 'ngx-toastr';
     <mat-card class="card">
       <mat-card-content>
         <h2 class="text-lg font-semibold mb-3">Raw Settings</h2>
-        <table mat-table [dataSource]="entries" class="w-full">
+        <table mat-table [dataSource]="pagedEntries" class="w-full">
           <ng-container matColumnDef="key">
             <th mat-header-cell *matHeaderCellDef>Key</th>
             <td mat-cell *matCellDef="let row">{{row.key}}</td>
@@ -120,6 +121,15 @@ import { ToastrService } from 'ngx-toastr';
           <tr mat-header-row *matHeaderRowDef="['key','value']"></tr>
           <tr mat-row *matRowDef="let row; columns: ['key','value'];"></tr>
         </table>
+        <mat-paginator
+          *ngIf="entries.length > pageSize"
+          [length]="entries.length"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="[5, 10, 20, 50]"
+          showFirstLastButtons
+          (page)="onPageChange($event)">
+        </mat-paginator>
       </mat-card-content>
     </mat-card>
   </div>
@@ -129,6 +139,9 @@ export class SettingsComponent implements OnInit {
   loading = false;
   data: SystemSettings = {};
   entries: { key: string; value: any }[] = [];
+  pagedEntries: { key: string; value: any }[] = [];
+  pageIndex = 0;
+  pageSize = 10;
   form: FormGroup;
 
   constructor(private settings: SettingsService, fb: FormBuilder, private toastr: ToastrService) {
@@ -156,6 +169,7 @@ export class SettingsComponent implements OnInit {
       next: (res) => {
         this.data = res || {};
         this.entries = Object.keys(this.data).map(k => ({ key: k, value: (this.data as any)[k] }));
+        this.updatePagedEntries();
         this.form.patchValue({
           libraryName: (this.data as any).libraryName ?? 'Smart Library',
           fineRatePerDay: (this.data as any).fineRatePerDay ?? 50,
@@ -185,10 +199,22 @@ export class SettingsComponent implements OnInit {
           maintenanceMode: false
         };
         this.entries = Object.keys(this.data).map(k => ({ key: k, value: (this.data as any)[k] }));
+        this.updatePagedEntries();
         this.form.patchValue(this.data);
         this.loading = false;
       }
     });
+  }
+
+  updatePagedEntries() {
+    const start = this.pageIndex * this.pageSize;
+    this.pagedEntries = this.entries.slice(start, start + this.pageSize);
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.updatePagedEntries();
   }
 
   save() {

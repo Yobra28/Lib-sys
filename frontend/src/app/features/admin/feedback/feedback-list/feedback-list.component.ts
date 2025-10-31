@@ -5,6 +5,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -22,6 +23,7 @@ import { FeedbackService } from '../../../../core/services/feedback.service';
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
+    MatPaginatorModule,
     MatFormFieldModule,
     MatInputModule
   ],
@@ -32,6 +34,9 @@ export class FeedbackListComponent implements OnInit {
   unreadFeedback: any[] = [];
   respondedFeedback: any[] = [];
   loading = false;
+  pageIndex = 0;
+  pageSize = 10;
+  pagedFeedback: any[] = [];
 
   constructor(
     private feedbackService: FeedbackService,
@@ -50,11 +55,23 @@ export class FeedbackListComponent implements OnInit {
         this.unreadFeedback = feedback.filter(f => !f.isRead);
         this.respondedFeedback = feedback.filter(f => f.response);
         this.loading = false;
+        this.updatePagedFeedback();
       },
       error: () => {
         this.loading = false;
       }
     });
+  }
+
+  updatePagedFeedback() {
+    const start = this.pageIndex * this.pageSize;
+    this.pagedFeedback = this.allFeedback.slice(start, start + this.pageSize);
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.updatePagedFeedback();
   }
 
   markAsRead(id: string) {

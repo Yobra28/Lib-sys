@@ -29,7 +29,7 @@
     <mat-card class="card p-5">
       <div class="flex items-center justify-between">
         <div>
-          <div class="text-sm text-slate-500">Registered Users</div>
+          <div class="text-sm text-slate-500">Students</div>
           <div class="text-2xl font-semibold">{{stats?.totalUsers || 0}}</div>
           <div class="text-xs text-success-600 mt-1">+1% this month</div>
         </div>
@@ -55,12 +55,12 @@
     <mat-card class="card p-5">
       <div class="flex items-center justify-between">
         <div>
-          <div class="text-sm text-slate-500">Seat Occupancy</div>
-          <div class="text-2xl font-semibold">{{((stats?.activeBorrows || 0)/(stats?.totalSeats||1))*100 | number:'1.0-0'}}%</div>
-          <div class="text-xs text-success-600 mt-1">85% target</div>
+          <div class="text-sm text-slate-500">Total Fines (All Time)</div>
+          <div class="text-2xl font-semibold">{{stats?.totalFinesAmount || 0 | currency:'USD':'symbol':'1.0-0'}}</div>
+          <div class="text-xs text-slate-500 mt-1">Pending: {{stats?.pendingFinesAmount || 0 | currency:'USD':'symbol':'1.0-0'}}</div>
         </div>
-        <div class="w-10 h-10 bg-success-100 text-success-700 rounded-lg flex items-center justify-center">
-          <mat-icon>event_seat</mat-icon>
+        <div class="w-10 h-10 bg-green-100 text-green-700 rounded-lg flex items-center justify-center">
+          <mat-icon>attach_money</mat-icon>
         </div>
       </div>
     </mat-card>

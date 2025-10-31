@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
-import { ReportService } from '../../../../core/services/report.service';
+import { ReportService, FinesTimeseriesPoint, BorrowStatusTimeseriesPoint } from '../../../../core/services/report.service';
 
 @Component({
   selector: 'app-reports',
@@ -27,6 +27,10 @@ export class ReportsComponent implements OnInit {
   borrowingTrends: any[] = [];
   categoryDistribution: any[] = [];
   overdueReport: any[] = [];
+  finesSeries: FinesTimeseriesPoint[] = [];
+  borrowStatusSeries: BorrowStatusTimeseriesPoint[] = [];
+  seatHeatmap: { days: string[]; hours: number[]; data: any } | null = null;
+  systemLogs: Array<{ timestamp: string; type: string; message: string; ref: string }> = [];
   loading = false;
 
   constructor(private reportService: ReportService) {}
@@ -62,12 +66,61 @@ export class ReportsComponent implements OnInit {
       }
     });
 
+    this.reportService.getFinesTimeseries(6).subscribe({
+      next: (series) => this.finesSeries = series
+    });
+
+    this.reportService.getBorrowStatusTimeseries(6).subscribe({
+      next: (series) => this.borrowStatusSeries = series
+    });
+
+    this.reportService.getSeatHeatmap(7).subscribe({
+      next: (hm) => this.seatHeatmap = hm
+    });
+
+    this.reportService.getSystemLogs(50).subscribe({
+      next: (logs) => this.systemLogs = logs
+    });
+
     this.reportService.getOverdueReport().subscribe({
       next: (overdue: any[]) => {
         this.overdueReport = overdue;
         this.loading = false;
       }
     });
+  }
+
+  getFinesMax(): number {
+    if (!this.finesSeries || this.finesSeries.length === 0) return 0;
+    return this.finesSeries.reduce((m, p) => Math.max(m, p.paid, p.pending, p.total), 0);
+  }
+
+  getFinesPolyline(series: 'paid' | 'pending'): string {
+    if (!this.finesSeries || this.finesSeries.length === 0) return '';
+    const len = this.finesSeries.length;
+    const max = this.getFinesMax() || 1;
+    const points: string[] = [];
+    for (let i = 0; i < len; i++) {
+      const x = 40 + i * (540 / Math.max(1, len - 1));
+      const value = series === 'paid' ? this.finesSeries[i].paid : this.finesSeries[i].pending;
+      const y = 200 - (value / max) * 180;
+      points.push(`${x},${y}`);
+    }
+    return points.join(' ');
+  }
+
+  finesLabelX(index: number): number {
+    if (!this.finesSeries || this.finesSeries.length === 0) return 40;
+    const len = this.finesSeries.length;
+    return 40 + index * (540 / Math.max(1, len - 1));
+  }
+
+  heatColor(value: number): string {
+    // Simple green scale 0..max, compute relative to a rough cap
+    const max = 10; // tune as needed
+    const v = Math.max(0, Math.min(1, value / max));
+    const g = Math.floor(255 * v);
+    return `rgba(16,185,129,${0.15 + 0.75 * v})`;
   }
 
   exportToPDF() {

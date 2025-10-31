@@ -77,8 +77,8 @@ import { User } from '../../../../core/services/user.service';
                   <p class="font-medium">{{user.phone || 'Not provided'}}</p>
                 </div>
                 <div class="col-span-2">
-                  <p class="text-sm text-gray-500 mb-1">Address</p>
-                  <p class="font-medium">{{user.address || 'Not provided'}}</p>
+                  <p class="text-sm text-gray-500 mb-1">Reg. No</p>
+                  <p class="font-medium">{{(user as any).regno || 'Not provided'}}</p>
                 </div>
               </div>
             </mat-card-content>
@@ -140,6 +140,8 @@ import { User } from '../../../../core/services/user.service';
     .user-detail-dialog {
       min-width: 600px;
       max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
     }
     .card {
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);

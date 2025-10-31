@@ -9,6 +9,7 @@ export interface DashboardStats {
   activeBorrows: number;
   totalSeats: number;
   pendingFinesAmount: number;
+  totalFinesAmount: number;
   overdueBooks: number;
 }
 
@@ -20,6 +21,20 @@ export interface BorrowingTrend {
 export interface CategoryDistribution {
   category: string;
   count: number;
+}
+
+export interface FinesTimeseriesPoint {
+  month: string;
+  paid: number;
+  pending: number;
+  total: number;
+}
+
+export interface BorrowStatusTimeseriesPoint {
+  month: string;
+  active: number;
+  overdue: number;
+  returned: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -61,5 +76,21 @@ export class ReportService {
 
   getOverdueReport(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/overdue`);
+  }
+
+  getFinesTimeseries(months: number = 6): Observable<FinesTimeseriesPoint[]> {
+    return this.http.get<FinesTimeseriesPoint[]>(`${this.apiUrl}/fines-timeseries`, { params: { months: String(months) } });
+  }
+
+  getBorrowStatusTimeseries(months: number = 6): Observable<BorrowStatusTimeseriesPoint[]> {
+    return this.http.get<BorrowStatusTimeseriesPoint[]>(`${this.apiUrl}/borrows-status-timeseries`, { params: { months: String(months) } });
+  }
+
+  getSeatHeatmap(days: number = 7): Observable<{ days: string[]; hours: number[]; data: any }>{
+    return this.http.get<{ days: string[]; hours: number[]; data: any }>(`${this.apiUrl}/seat-heatmap`, { params: { days: String(days) } });
+  }
+
+  getSystemLogs(limit: number = 50): Observable<Array<{ timestamp: string; type: string; message: string; ref: string }>> {
+    return this.http.get<Array<{ timestamp: string; type: string; message: string; ref: string }>>(`${this.apiUrl}/system-logs`, { params: { limit: String(limit) } });
   }
 }

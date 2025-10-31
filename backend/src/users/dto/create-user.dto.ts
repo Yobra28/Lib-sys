@@ -75,11 +75,11 @@ export class CreateUserDto {
   phone?: string;
 
   @ApiProperty({ 
-    example: 'Nairobi, Kenya',
+    example: 'CUC/1234/20',
     required: false,
-    description: 'User address'
+    description: 'Student registration number'
   })
   @IsString()
   @IsOptional()
-  address?: string;
+  regno?: string;
 }

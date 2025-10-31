@@ -37,8 +37,8 @@ import { AuthService } from '../../../core/services/auth.service';
               <input matInput formControlName="phone" />
             </mat-form-field>
             <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Address</mat-label>
-              <textarea matInput rows="2" formControlName="address"></textarea>
+              <mat-label>Reg. No</mat-label>
+              <input matInput formControlName="regno" />
             </mat-form-field>
 
             <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving">Save Changes</button>
@@ -59,7 +59,7 @@ export class ProfileComponent implements OnInit {
       lastName: [u?.lastName || '', Validators.required],
       email: [u?.email || ''],
       phone: [u?.phone || ''],
-      address: [u?.address || '']
+      regno: [(u as any)?.regno || '']
     });
   }
 
@@ -67,8 +67,8 @@ export class ProfileComponent implements OnInit {
 
   save() {
     this.saving = true;
-    const { firstName, lastName, phone, address } = this.form.value;
-    this.auth.updateProfile({ firstName, lastName, phone, address }).subscribe({
+    const { firstName, lastName, phone, regno } = this.form.value;
+    this.auth.updateProfile({ firstName, lastName, phone, regno } as any).subscribe({
       next: () => { this.toastr.success('Profile updated'); this.saving = false; },
       error: () => { this.toastr.error('Failed to update'); this.saving = false; }
     });

@@ -22,8 +22,8 @@ async function main() {
       lastName: 'Administrator',
       role: 'ADMIN',
       phone: '+254700000000',
-      address: 'Library Office',
-    },
+      regno: 'ADMIN-001',
+    } as any,
   });
   console.log('✅ Admin user created:', admin.email);
 
@@ -39,8 +39,8 @@ async function main() {
       lastName: 'Librarian',
       role: 'LIBRARIAN',
       phone: '+254700000001',
-      address: 'Library Office',
-    },
+      regno: 'LIB-001',
+    } as any,
   });
   console.log('✅ Librarian user created:', librarian.email);
 
@@ -58,8 +58,8 @@ async function main() {
         lastName: 'Student',
         role: 'STUDENT',
         phone: '+254712345678',
-        address: 'Chuka, Kenya',
-      },
+        regno: 'CUC/0001/20',
+      } as any,
     }),
     prisma.user.upsert({
       where: { email: 'mary.student@library.com' },
@@ -71,8 +71,8 @@ async function main() {
         lastName: 'Wanjiru',
         role: 'STUDENT',
         phone: '+254723456789',
-        address: 'Nairobi, Kenya',
-      },
+        regno: 'CUC/0002/20',
+      } as any,
     }),
   ]);
   console.log('✅ Sample students created');

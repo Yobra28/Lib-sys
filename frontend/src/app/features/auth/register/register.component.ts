@@ -66,9 +66,9 @@ import { AuthService } from '../../../core/services/auth.service';
               </mat-form-field>
 
               <mat-form-field appearance="outline">
-                <mat-label>Address</mat-label>
-                <input matInput formControlName="address">
-                <mat-icon matPrefix>location_on</mat-icon>
+                <mat-label>Reg. No</mat-label>
+                <input matInput formControlName="regno" placeholder="e.g. CUC/1234/20">
+                <mat-icon matPrefix>badge</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -134,7 +134,7 @@ export class RegisterComponent {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: [''],
-      address: [''],
+      regno: [''],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
       acceptTerms: [false, Validators.requiredTrue]

@@ -32,4 +32,76 @@
       <tr mat-row *matRowDef="let row; columns: ['title','author','count'];"></tr>
     </table>
   </mat-card>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- Fines Over Time (simple SVG line chart) -->
+    <mat-card class="card p-5">
+      <h2 class="text-lg font-semibold mb-3">Fines Over Time</h2>
+      <div class="text-sm text-slate-500 mb-2">Paid vs Pending (last 6 months)</div>
+      <div class="w-full overflow-x-auto">
+        <svg [attr.viewBox]="'0 0 600 220'" width="100%" height="220">
+          <g *ngIf="finesSeries.length">
+            <line x1="40" y1="10" x2="40" y2="200" stroke="#e5e7eb"/>
+            <line x1="40" y1="200" x2="580" y2="200" stroke="#e5e7eb"/>
+            <polyline [attr.points]="getFinesPolyline('paid')" fill="none" stroke="#10b981" stroke-width="2"/>
+            <polyline [attr.points]="getFinesPolyline('pending')" fill="none" stroke="#ef4444" stroke-width="2"/>
+            <g *ngFor="let p of finesSeries; let i = index">
+              <text [attr.x]="finesLabelX(i)" y="215" text-anchor="middle" class="text-[10px] fill-slate-500">{{p.month}}</text>
+            </g>
+          </g>
+        </svg>
+        <div class="flex gap-4 text-sm mt-2">
+          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded bg-emerald-500"></span> Paid</div>
+          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded bg-red-500"></span> Pending</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Borrow Status Over Time (stacked bars) -->
+    <mat-card class="card p-5">
+      <h2 class="text-lg font-semibold mb-3">Borrow Status Over Time</h2>
+      <div class="space-y-2">
+        <div *ngFor="let p of borrowStatusSeries" class="flex items-center gap-3">
+          <div class="w-24 text-xs text-slate-600">{{p.month}}</div>
+          <div class="flex-1 flex h-4 rounded overflow-hidden border border-slate-200">
+            <div class="bg-blue-500" [style.width.%]="(p.active/(p.active+p.overdue+p.returned||1))*100"></div>
+            <div class="bg-amber-500" [style.width.%]="(p.overdue/(p.active+p.overdue+p.returned||1))*100"></div>
+            <div class="bg-emerald-500" [style.width.%]="(p.returned/(p.active+p.overdue+p.returned||1))*100"></div>
+          </div>
+        </div>
+        <div class="flex gap-4 text-sm mt-2">
+          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded bg-blue-500"></span> Active</div>
+          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded bg-amber-500"></span> Overdue</div>
+          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded bg-emerald-500"></span> Returned</div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Seat Utilization Heatmap -->
+  <mat-card class="card p-5">
+    <h2 class="text-lg font-semibold mb-3">Seat Utilization (last 7 days)</h2>
+    <div class="overflow-x-auto">
+      <div class="inline-block">
+        <div class="grid" [style.gridTemplateColumns]="'repeat(' + (seatHeatmap?.days?.length || 0) + ', 20px)'"></div>
+        <div class="flex">
+          <div class="w-10 text-xs text-slate-500">&nbsp;</div>
+          <div class="grid gap-1" [style.gridTemplateColumns]="'repeat(' + (seatHeatmap?.days?.length || 0) + ', 20px)'">
+            <div *ngFor="let d of seatHeatmap?.days" class="text-[10px] text-slate-500 w-[20px] truncate" [title]="d">{{d.slice(5)}}</div>
+          </div>
+        </div>
+        <div class="flex mt-1">
+          <div class="flex flex-col gap-1">
+            <div *ngFor="let h of seatHeatmap?.hours" class="h-[20px] text-[10px] text-slate-500 w-10 text-right pr-1">{{h}}h</div>
+          </div>
+          <div class="grid gap-1" [style.gridTemplateColumns]="'repeat(' + (seatHeatmap?.days?.length || 0) + ', 20px)'">
+            <ng-container *ngFor="let h of seatHeatmap?.hours">
+              <div *ngFor="let d of seatHeatmap?.days" class="w-[20px] h-[20px] rounded" [style.background]="heatColor(seatHeatmap?.data?.[h]?.[d] || 0)" [title]="(seatHeatmap?.data?.[h]?.[d] || 0) + ' reservations'"></div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+
 </div>

@@ -41,6 +41,38 @@ export class ReportsController {
     );
   }
 
+  @Get('fines-timeseries')
+  @Roles(UserRole.ADMIN, UserRole.LIBRARIAN)
+  @ApiOperation({ summary: 'Get fines timeseries (Admin/Librarian only)' })
+  @ApiQuery({ name: 'months', required: false, type: Number })
+  getFinesTimeseries(@Query('months') months?: string) {
+    return this.reportsService.getFinesTimeseries(months ? parseInt(months) : 6);
+  }
+
+  @Get('borrows-status-timeseries')
+  @Roles(UserRole.ADMIN, UserRole.LIBRARIAN)
+  @ApiOperation({ summary: 'Get borrows status timeseries (Admin/Librarian only)' })
+  @ApiQuery({ name: 'months', required: false, type: Number })
+  getBorrowStatusTimeseries(@Query('months') months?: string) {
+    return this.reportsService.getBorrowStatusTimeseries(months ? parseInt(months) : 6);
+  }
+
+  @Get('seat-heatmap')
+  @Roles(UserRole.ADMIN, UserRole.LIBRARIAN)
+  @ApiOperation({ summary: 'Get seat utilization heatmap (Admin/Librarian only)' })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  getSeatHeatmap(@Query('days') days?: string) {
+    return this.reportsService.getSeatHeatmap(days ? parseInt(days) : 7);
+  }
+
+  @Get('system-logs')
+  @Roles(UserRole.ADMIN, UserRole.LIBRARIAN)
+  @ApiOperation({ summary: 'Get recent system logs (Admin/Librarian only)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  getSystemLogs(@Query('limit') limit?: string) {
+    return this.reportsService.getSystemLogs(limit ? parseInt(limit) : 50);
+  }
+
   @Get('category-distribution')
   @Roles(UserRole.ADMIN, UserRole.LIBRARIAN)
   @ApiOperation({ summary: 'Get book category distribution (Admin/Librarian only)' })

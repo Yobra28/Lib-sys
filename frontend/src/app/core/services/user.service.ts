@@ -10,7 +10,7 @@ export interface User {
   lastName: string;
   role: string;
   phone?: string;
-  address?: string;
+  regno?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -31,7 +31,7 @@ export interface CreateUserDto {
   lastName: string;
   role: string;
   phone?: string;
-  address?: string;
+  regno?: string;
 }
 
 export interface UpdateUserDto {
@@ -40,7 +40,7 @@ export interface UpdateUserDto {
   lastName?: string;
   role?: string;
   phone?: string;
-  address?: string;
+  regno?: string;
   isActive?: boolean;
 }
 

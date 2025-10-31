@@ -16,6 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { UserService, User, FilterUserDto } from '../../../../core/services/user.service';
 import { UserDetailDialogComponent } from './user-detail-dialog.component';
+import { UserEditDialogComponent } from './user-edit-dialog.component';
 
 @Component({
   selector: 'app-users-list',
@@ -169,8 +170,16 @@ export class UsersListComponent implements OnInit {
   }
 
   editUser(user: User) {
-    this.toastr.info(`Editing ${user.firstName} ${user.lastName}`);
-    // TODO: Open edit user dialog
+    const ref = this.dialog.open(UserEditDialogComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      data: user
+    });
+    ref.afterClosed().subscribe(res => {
+      if (res) {
+        this.loadUsers();
+      }
+    });
   }
 }
 

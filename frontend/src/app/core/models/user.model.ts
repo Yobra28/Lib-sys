@@ -10,7 +10,7 @@ export interface User {
   lastName: string;
   email: string;
   phone?: string;
-  address?: string;
+  regno?: string;
   role: UserRole;
   createdAt?: string;
   updatedAt?: string;
@@ -26,7 +26,7 @@ export interface RegisterRequest {
   lastName: string;
   email: string;
   phone?: string;
-  address?: string;
+  regno?: string;
   password: string;
 }
 
