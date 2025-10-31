@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap, catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -29,6 +29,13 @@ export class NotificationService {
 
   getMyNotifications(): Observable<Notification[]> {
     return this.http.get<Notification[]>(`${this.apiUrl}/my-notifications`);
+  }
+
+  // Admin/Librarian: fetch all notifications, optionally by user
+  getAll(userId?: string): Observable<Notification[]> {
+    let params = new HttpParams();
+    if (userId) params = params.append('userId', userId);
+    return this.http.get<Notification[]>(this.apiUrl, { params });
   }
 
   getUnreadCount(): Observable<number> {

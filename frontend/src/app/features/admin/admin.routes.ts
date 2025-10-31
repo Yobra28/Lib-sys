@@ -67,6 +67,11 @@ export const ADMIN_ROUTES: Routes = [
           .then(m => m.LogsListComponent)
       },
       {
+        path: 'reminders',
+        loadComponent: () => import('./notifications/reminder-logs/reminder-logs.component')
+          .then(m => m.ReminderLogsComponent)
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./settings/settings.component')
           .then(m => m.SettingsComponent)
