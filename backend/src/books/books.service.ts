@@ -16,6 +16,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { FilterBookDto } from './dto/filter-book.dto';
+import { RecommendBooksDto } from './dto/recommend-books.dto';
 
 @Injectable()
 export class BooksService {
@@ -50,7 +51,7 @@ export class BooksService {
     }
 
     if (filterDto?.category) {
-      where.category = filterDto.category;
+      where.category = { equals: filterDto.category, mode: 'insensitive' };
     }
 
     if (filterDto?.author) {
@@ -141,5 +142,45 @@ export class BooksService {
     });
 
     return categories.map((c) => c.category);
+  }
+
+  async recommend(q: RecommendBooksDto) {
+    const { category, studentId, limit = 20 } = q;
+
+    if (!category || category.trim() === '') {
+      throw new BadRequestException('category is required');
+    }
+
+    const where: any = {
+      category: { equals: category, mode: 'insensitive' },
+      availableCopies: { gt: 0 },
+    };
+
+    // Optionally exclude books the student has already borrowed (any status)
+    if (studentId) {
+      where.NOT = {
+        borrows: {
+          some: { userId: studentId },
+        },
+      };
+    }
+
+    return this.prisma.book.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        author: true,
+        coverImage: true,
+        category: true,
+        availableCopies: true,
+        _count: { select: { borrows: true } },
+      },
+      orderBy: [
+        { borrows: { _count: 'desc' } }, // popularity by borrow count
+        { createdAt: 'desc' },
+      ],
+      take: typeof limit === 'number' ? limit : Number(limit),
+    });
   }
 }

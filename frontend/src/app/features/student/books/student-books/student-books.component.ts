@@ -234,6 +234,10 @@ export class StudentBooksComponent implements OnInit {
     this.loadBooks();
     this.loadCategories();
     this.setupSearchListener();
+
+    // Auto-apply filters when category/status changes
+    this.categoryControl.valueChanges.subscribe(() => this.searchBooks());
+    this.statusControl.valueChanges.subscribe(() => this.searchBooks());
   }
 
   setupSearchListener() {

@@ -24,7 +24,7 @@ export const withErrorHandling: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        toastr.error('Session expired. Please login again.');
+        toastr.error('Log in failed . Please login again.');
         router.navigate(['/auth/login']);
       } else if (error.status === 403) {
         toastr.error('You are not authorized to perform this action.');

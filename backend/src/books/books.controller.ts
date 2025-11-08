@@ -55,6 +55,12 @@ export class BooksController {
     return this.booksService.findAll(filterDto);
   }
 
+  @Get('recommendations')
+  @ApiOperation({ summary: 'Get recommended books for a category, optionally personalized for a student' })
+  recommend(@Query() q: import('./dto/recommend-books.dto').RecommendBooksDto) {
+    return this.booksService.recommend(q);
+  }
+
   @Get('categories')
   @ApiOperation({ summary: 'Get all book categories' })
   getCategories() {

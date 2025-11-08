@@ -43,9 +43,10 @@ import { NotificationService, Notification } from '../../../../core/services/not
             <mat-select [(value)]="selectedType" (selectionChange)="filterByType()">
               <mat-option [value]="''">All</mat-option>
               <mat-option value="DUE_REMINDER">Due Reminder (Tomorrow)</mat-option>
-              <mat-option value="DUE_REMINDER_5H">Due Reminder (5h)</mat-option>
+              <mat-option value="DUE_REMINDER_TODAY">Due Reminder (Today 8am)</mat-option>
               <mat-option value="OVERDUE">Overdue</mat-option>
-              <mat-option value="SEAT_REMINDER">Seat Reminder</mat-option>
+              <mat-option value="SEAT_REMINDER_30M">Seat Reminder (30m)</mat-option>
+              <mat-option value="SEAT_REMINDER_15M">Seat Reminder (15m)</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -114,7 +115,7 @@ export class ReminderLogsComponent implements OnInit {
     this.loading = true;
     this.notifications.getAll().subscribe({
       next: (rows) => {
-        const reminderTypes = new Set(['DUE_REMINDER','DUE_REMINDER_5H','OVERDUE','SEAT_REMINDER']);
+        const reminderTypes = new Set(['DUE_REMINDER','DUE_REMINDER_TODAY','OVERDUE','SEAT_REMINDER_30M','SEAT_REMINDER_15M']);
         const filtered = (rows || []).filter(n => reminderTypes.has(n.type));
         this.dataSource.data = filtered;
         this.loading = false;

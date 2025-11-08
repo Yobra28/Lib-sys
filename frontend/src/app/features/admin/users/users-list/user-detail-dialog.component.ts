@@ -78,7 +78,7 @@ import { User } from '../../../../core/services/user.service';
                 </div>
                 <div class="col-span-2">
                   <p class="text-sm text-gray-500 mb-1">Reg. No</p>
-                  <p class="font-medium">{{(user as any).regno || 'Not provided'}}</p>
+                  <p class="font-medium">{{user.regno}}</p>
                 </div>
               </div>
             </mat-card-content>

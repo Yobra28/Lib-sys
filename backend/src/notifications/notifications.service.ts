@@ -15,6 +15,9 @@ import * as nodemailer from 'nodemailer';
 @Injectable()
 export class NotificationsService {
   private transporter: nodemailer.Transporter;
+  private readonly EAT_TZ = 'Africa/Nairobi';
+  private readonly DAY_MS = 24 * 60 * 60 * 1000;
+  private readonly EAT_OFFSET_MS = 3 * 60 * 60 * 1000; // UTC+3, no DST
 
   constructor(
     private prisma: PrismaService,
@@ -62,6 +65,25 @@ export class NotificationsService {
     return notification;
   }
 
+  private getEatDayBounds(instantUtc: Date): { start: Date; end: Date } {
+    const ms = instantUtc.getTime();
+    const eatMs = ms + this.EAT_OFFSET_MS;
+    const dayStartEatMs = Math.floor(eatMs / this.DAY_MS) * this.DAY_MS;
+    const dayEndEatMs = dayStartEatMs + this.DAY_MS;
+    return {
+      start: new Date(dayStartEatMs - this.EAT_OFFSET_MS),
+      end: new Date(dayEndEatMs - this.EAT_OFFSET_MS),
+    };
+  }
+
+  private formatTimeEAT(d: Date): string {
+    return d.toLocaleTimeString('en-KE', { timeZone: this.EAT_TZ, hour: '2-digit', minute: '2-digit' });
+  }
+
+  private formatDateEAT(d: Date): string {
+    return d.toLocaleDateString('en-KE', { timeZone: this.EAT_TZ });
+  }
+
   async findAll(userId?: string) {
     const where: any = {};
 
@@ -106,21 +128,17 @@ export class NotificationsService {
   }
 
   // Send due date reminders daily
-  @Cron(CronExpression.EVERY_DAY_AT_8AM)
+  @Cron(CronExpression.EVERY_DAY_AT_8AM, { timeZone: 'Africa/Nairobi' })
   async sendDueDateReminders() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-
-    const dayAfter = new Date(tomorrow);
-    dayAfter.setDate(dayAfter.getDate() + 1);
+    const now = new Date();
+    const { start: tomorrowStart, end: dayAfterStart } = this.getEatDayBounds(new Date(now.getTime() + this.DAY_MS));
 
     const dueBooks = await this.prisma.borrow.findMany({
       where: {
         status: 'ACTIVE',
         dueDate: {
-          gte: tomorrow,
-          lt: dayAfter,
+          gte: tomorrowStart,
+          lt: dayAfterStart,
         },
       },
       include: {
@@ -133,7 +151,7 @@ export class NotificationsService {
       await this.create({
         userId: borrow.userId,
         title: 'Book Due Tomorrow',
-        message: `Your borrowed book "${borrow.book.title}" is due tomorrow (${new Date(borrow.dueDate).toLocaleDateString()}). Please return it on time to avoid fines.`,
+        message: `Your borrowed book \"${borrow.book.title}\" is due tomorrow (${this.formatDateEAT(new Date(borrow.dueDate))}). Please return it on time to avoid fines.`,
         type: 'DUE_REMINDER',
       });
     }
@@ -142,7 +160,7 @@ export class NotificationsService {
   }
 
   // Send overdue notifications daily
-  @Cron(CronExpression.EVERY_DAY_AT_9AM)
+  @Cron(CronExpression.EVERY_DAY_AT_9AM, { timeZone: 'Africa/Nairobi' })
   async sendOverdueNotifications() {
     const overdueBooks = await this.prisma.borrow.findMany({
       where: {
@@ -196,7 +214,7 @@ export class NotificationsService {
       await this.create({
         userId: borrow.userId,
         title: 'Book Borrowed Successfully',
-        message: `You have successfully borrowed "${borrow.book.title}". Due date: ${new Date(borrow.dueDate).toLocaleDateString()}`,
+        message: `You have successfully borrowed \"${borrow.book.title}\". Due date: ${this.formatDateEAT(new Date(borrow.dueDate))}`,
         type: 'BORROW_SUCCESS',
       });
     }
@@ -228,109 +246,117 @@ export class NotificationsService {
       await this.create({
         userId: reservation.userId,
         title: 'Seat Reservation Confirmed',
-        message: `Your seat ${reservation.seat.seatNumber} has been reserved for ${new Date(reservation.reservationDate).toLocaleDateString()} from ${new Date(reservation.startTime).toLocaleTimeString()} to ${new Date(reservation.endTime).toLocaleTimeString()}`,
+        message: `Your seat ${reservation.seat.seatNumber} has been reserved for ${this.formatDateEAT(new Date(reservation.reservationDate))} from ${this.formatTimeEAT(new Date(reservation.startTime))} to ${this.formatTimeEAT(new Date(reservation.endTime))} (EAT)`,
         type: 'RESERVATION_SUCCESS',
       });
     }
   }
 
-  // Send seat reservation reminders 15 minutes before end time
-  @Cron('*/15 * * * *') // Every 15 minutes
+  // Send seat reservation reminders 30 minutes and 15 minutes before end time
+  @Cron('*/15 * * * *', { timeZone: 'Africa/Nairobi' }) // Every 15 minutes (aligned to :00, :15, :30, :45)
   async sendSeatReservationReminders() {
     const now = new Date();
-    const reminderTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+    const { start: todayStart, end: tomorrowStart } = this.getEatDayBounds(now);
 
-    const upcomingReservations = await this.prisma.seatReservation.findMany({
-      where: {
-        status: 'APPROVED',
-        reservationDate: {
-          gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-          lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
-        },
-        endTime: {
-          gte: now,
-          lte: reminderTime,
-        },
-      },
-      include: {
-        user: true,
-        seat: true,
-      },
-    });
+    // Targets at exactly -30m and -15m from end time (rounded to minute)
+    const target30 = new Date(now.getTime() + 30 * 60 * 1000);
+    target30.setSeconds(0, 0);
+    const target15 = new Date(now.getTime() + 15 * 60 * 1000);
+    target15.setSeconds(0, 0);
 
-    for (const reservation of upcomingReservations) {
-      // Check if we already sent a reminder for this reservation
-      const existingReminder = await this.prisma.notification.findFirst({
+    const [reservations30, reservations15] = await Promise.all([
+      this.prisma.seatReservation.findMany({
+        where: {
+          status: 'APPROVED',
+          reservationDate: { gte: todayStart, lt: tomorrowStart },
+          endTime: {
+            gte: new Date(target30.getTime() - 60 * 1000),
+            lt: new Date(target30.getTime() + 60 * 1000),
+          },
+        },
+        include: { user: true, seat: true },
+      }),
+      this.prisma.seatReservation.findMany({
+        where: {
+          status: 'APPROVED',
+          reservationDate: { gte: todayStart, lt: tomorrowStart },
+          endTime: {
+            gte: new Date(target15.getTime() - 60 * 1000),
+            lt: new Date(target15.getTime() + 60 * 1000),
+          },
+        },
+        include: { user: true, seat: true },
+      }),
+    ]);
+
+    let sent30 = 0;
+    for (const reservation of reservations30) {
+      const existing = await this.prisma.notification.findFirst({
         where: {
           userId: reservation.userId,
-          type: 'SEAT_REMINDER',
-          message: {
-            contains: `Seat ${reservation.seat.seatNumber}`,
-          },
-          sentAt: {
-            gte: new Date(now.getTime() - 30 * 60 * 1000), // Within last 30 minutes
-          },
+          type: 'SEAT_REMINDER_30M',
+          message: { contains: `Seat ${reservation.seat.seatNumber}` },
+          sentAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
         },
       });
-
-      if (!existingReminder) {
+      if (!existing) {
         await this.create({
           userId: reservation.userId,
           title: 'Seat Reservation Ending Soon',
-          message: `Your seat reservation for ${reservation.seat.seatNumber} ends in 15 minutes (${new Date(reservation.endTime).toLocaleTimeString()}). Please prepare to vacate the seat.`,
-          type: 'SEAT_REMINDER',
+          message: `Your seat reservation for ${reservation.seat.seatNumber} ends in 30 minutes (${this.formatTimeEAT(new Date(reservation.endTime))} EAT). Please prepare accordingly.`,
+          type: 'SEAT_REMINDER_30M',
         });
+        sent30++;
       }
     }
 
-    console.log(`✅ Sent ${upcomingReservations.length} seat reservation reminders`);
-  }
-
-  // Send due date reminders 5 hours before due date
-  @Cron('0 */6 * * *') // Every 6 hours
-  async sendDueDateReminders5Hours() {
-    const now = new Date();
-    const fiveHoursFromNow = new Date(now.getTime() + 5 * 60 * 60 * 1000);
-
-    const dueBooks = await this.prisma.borrow.findMany({
-      where: {
-        status: 'ACTIVE',
-        dueDate: {
-          gte: now,
-          lte: fiveHoursFromNow,
-        },
-      },
-      include: {
-        user: true,
-        book: true,
-      },
-    });
-
-    for (const borrow of dueBooks) {
-      // Check if we already sent a 5-hour reminder for this borrow
-      const existingReminder = await this.prisma.notification.findFirst({
+    let sent15 = 0;
+    for (const reservation of reservations15) {
+      const existing = await this.prisma.notification.findFirst({
         where: {
-          userId: borrow.userId,
-          type: 'DUE_REMINDER_5H',
-          message: {
-            contains: borrow.book.title,
-          },
-          sentAt: {
-            gte: new Date(now.getTime() - 6 * 60 * 60 * 1000), // Within last 6 hours
-          },
+          userId: reservation.userId,
+          type: 'SEAT_REMINDER_15M',
+          message: { contains: `Seat ${reservation.seat.seatNumber}` },
+          sentAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
         },
       });
-
-      if (!existingReminder) {
+      if (!existing) {
         await this.create({
-          userId: borrow.userId,
-          title: 'Book Due in 5 Hours',
-          message: `Your borrowed book "${borrow.book.title}" is due in 5 hours (${new Date(borrow.dueDate).toLocaleString()}). Please return it on time to avoid fines.`,
-          type: 'DUE_REMINDER_5H',
+          userId: reservation.userId,
+          title: 'Seat Reservation Ending Soon',
+          message: `Your seat reservation for ${reservation.seat.seatNumber} ends in 15 minutes (${this.formatTimeEAT(new Date(reservation.endTime))} EAT). Please prepare to vacate the seat.`,
+          type: 'SEAT_REMINDER_15M',
         });
+        sent15++;
       }
     }
 
-    console.log(`✅ Sent ${dueBooks.length} 5-hour due date reminders`);
+    console.log(`✅ Seat reminders — considered30=${reservations30.length}, sent30=${sent30}; considered15=${reservations15.length}, sent15=${sent15}`);
+  }
+
+  // Morning-of due date reminders (8 AM of the due date)
+  @Cron(CronExpression.EVERY_DAY_AT_8AM, { timeZone: 'Africa/Nairobi' })
+  async sendDueDateMorningOf() {
+    const now = new Date();
+    const { start: todayStart, end: tomorrowStart } = this.getEatDayBounds(now);
+
+    const dueToday = await this.prisma.borrow.findMany({
+      where: {
+        status: 'ACTIVE',
+        dueDate: { gte: todayStart, lt: tomorrowStart },
+      },
+      include: { user: true, book: true },
+    });
+
+    for (const borrow of dueToday) {
+      await this.create({
+        userId: borrow.userId,
+        title: 'Book Due Today',
+        message: `Your borrowed book \"${borrow.book.title}\" is due today (${this.formatDateEAT(new Date(borrow.dueDate))}). Please return it by the due time to avoid fines.`,
+        type: 'DUE_REMINDER_TODAY',
+      });
+    }
+
+    console.log(`✅ Sent ${dueToday.length} due-today reminders`);
   }
 }
