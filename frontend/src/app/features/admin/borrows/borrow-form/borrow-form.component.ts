@@ -73,9 +73,9 @@ export class BorrowFormComponent implements OnInit {
   }
 
   loadBooks() {
-    this.bookService.getAll({ status: 'AVAILABLE' }).subscribe({
-      next: (books) => {
-        this.books = books.filter(b => b.availableCopies > 0);
+    this.bookService.getAll({ status: 'AVAILABLE', page: 1, limit: 100 }).subscribe({
+      next: (res) => {
+        this.books = res.items.filter(b => b.availableCopies > 0);
       }
     });
   }

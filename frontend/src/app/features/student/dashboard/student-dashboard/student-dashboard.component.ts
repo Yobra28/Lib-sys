@@ -7,6 +7,7 @@ import { BorrowService } from '../../../../core/services/borrow.service';
 import { ReservationService } from '../../../../core/services/reservation.service';
 import { FineService } from '../../../../core/services/fine.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { BookService, AiRecommendedBook } from '../../../../core/services/book.service';
 import { User } from '../../../../core/models/user.model';
 
 interface ActivityItem {
@@ -37,6 +38,10 @@ export class StudentDashboardComponent implements OnInit {
   // Activity
   recentActivity: ActivityItem[] = [];
   
+  // AI Recommendations
+  aiRecommendations: AiRecommendedBook[] = [];
+  loadingAiRecommendations = false;
+  
   // Loading
   loading = true;
 
@@ -44,7 +49,8 @@ export class StudentDashboardComponent implements OnInit {
     private borrowService: BorrowService,
     private reservationService: ReservationService,
     private fineService: FineService,
-    private authService: AuthService
+    private authService: AuthService,
+    private bookService: BookService
   ) {}
 
   ngOnInit() {
@@ -59,6 +65,22 @@ export class StudentDashboardComponent implements OnInit {
     }, 60000);
     
     this.loadDashboardData();
+    this.loadAiRecommendations();
+  }
+
+  loadAiRecommendations() {
+    this.loadingAiRecommendations = true;
+    this.bookService.getAiAgentRecommendationsForMe(6).subscribe({
+      next: (books) => {
+        this.aiRecommendations = books;
+        this.loadingAiRecommendations = false;
+      },
+      error: (error) => {
+        console.error('Error loading AI recommendations:', error);
+        this.loadingAiRecommendations = false;
+        // Silently fail - AI recommendations are optional
+      }
+    });
   }
 
   loadDashboardData() {

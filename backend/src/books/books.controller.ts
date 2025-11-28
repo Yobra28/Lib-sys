@@ -30,6 +30,9 @@ import { FilterBookDto } from './dto/filter-book.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import type { RecommendBooksDto } from './dto/recommend-books.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AiAgentService } from '../ai/ai-agent.service';
 
 @ApiTags('books')
 @Controller('books')
@@ -38,6 +41,7 @@ export class BooksController {
   constructor(
     private readonly booksService: BooksService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly aiAgentService: AiAgentService,
   ) {}
 
   @Post()
@@ -57,8 +61,14 @@ export class BooksController {
 
   @Get('recommendations')
   @ApiOperation({ summary: 'Get recommended books for a category, optionally personalized for a student' })
-  recommend(@Query() q: import('./dto/recommend-books.dto').RecommendBooksDto) {
+  recommend(@Query() q: RecommendBooksDto) {
     return this.booksService.recommend(q);
+  }
+
+  @Get('ai-agent/me')
+  @ApiOperation({ summary: 'AI agent recommendations for the current user' })
+  aiAgentRecommendForMe(@CurrentUser('id') userId: string) {
+    return this.aiAgentService.recommendForUser(userId);
   }
 
   @Get('categories')

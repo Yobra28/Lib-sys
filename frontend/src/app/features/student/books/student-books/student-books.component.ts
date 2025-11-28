@@ -11,6 +11,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ToastrService } from 'ngx-toastr';
 import { BookService } from '../../../../core/services/book.service';
 import { BorrowService, BorrowDuration } from '../../../../core/services/borrow.service';
@@ -18,6 +19,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { Book, BookStatus } from '../../../../core/models/book.model';
 import { BorrowDurationDialogComponent } from '../borrow-duration-dialog/borrow-duration-dialog.component';
 import { BookDetailDialogComponent } from '../book-detail-dialog/book-detail-dialog.component';
+import { RecommendationsDialogComponent } from '../recommendations-dialog/recommendations-dialog.component';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
@@ -35,7 +37,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatDialogModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    MatPaginatorModule
   ],
   template: `
     <div class="p-6">
@@ -126,7 +129,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
               <div class="flex gap-2">
                 <button mat-raised-button color="primary" 
-                        [disabled]="book.availableCopies === 0 || borrowing"
+                        [disabled]="book.availableCopies === 0 || book.status !== 'AVAILABLE' || borrowedBookIds.has(book.id) || borrowing"
                         (click)="borrowBook(book)"
                         class="flex-1">
                   <mat-icon>add</mat-icon>
@@ -170,7 +173,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
               <div class="flex items-center gap-2 w-full sm:w-auto">
                 <button mat-raised-button color="primary" 
-                        [disabled]="book.availableCopies === 0 || borrowing"
+                        [disabled]="book.availableCopies === 0 || book.status !== 'AVAILABLE' || borrowedBookIds.has(book.id) || borrowing"
                         (click)="borrowBook(book)"
                         class="flex-1 sm:flex-none">
                   <mat-icon>add</mat-icon>
@@ -185,6 +188,17 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
           </mat-card>
         </div>
       </ng-container>
+
+      <!-- Pagination -->
+      <div *ngIf="!loading && total > pageSize" class="mt-4 flex justify-end">
+        <mat-paginator
+          [length]="total"
+          [pageIndex]="pageIndex"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[8, 12, 16, 24]"
+          (page)="onPage($event)">
+        </mat-paginator>
+      </div>
 
       <!-- No Results -->
       <div *ngIf="!loading && books.length === 0" class="text-center py-20">
@@ -209,6 +223,10 @@ export class StudentBooksComponent implements OnInit {
   loading = false;
   borrowing = false;
   viewMode: 'grid' | 'list' = 'list';
+  total = 0;
+  pageIndex = 0;
+  pageSize = 12;
+  borrowedBookIds = new Set<string>();
 
   searchControl = new FormControl('');
   categoryControl = new FormControl(null);
@@ -234,10 +252,11 @@ export class StudentBooksComponent implements OnInit {
     this.loadBooks();
     this.loadCategories();
     this.setupSearchListener();
+    this.loadMyBorrows();
 
     // Auto-apply filters when category/status changes
-    this.categoryControl.valueChanges.subscribe(() => this.searchBooks());
-    this.statusControl.valueChanges.subscribe(() => this.searchBooks());
+    this.categoryControl.valueChanges.subscribe(() => { this.pageIndex = 0; this.searchBooks(); });
+    this.statusControl.valueChanges.subscribe(() => { this.pageIndex = 0; this.searchBooks(); });
   }
 
   setupSearchListener() {
@@ -246,7 +265,7 @@ export class StudentBooksComponent implements OnInit {
         debounceTime(300),
         distinctUntilChanged()
       )
-      .subscribe(() => this.searchBooks());
+      .subscribe(() => { this.pageIndex = 0; this.searchBooks(); });
   }
 
   loadBooks() {
@@ -254,8 +273,9 @@ export class StudentBooksComponent implements OnInit {
     const filters = this.getFilters();
 
     this.bookService.getAll(filters).subscribe({
-      next: (books: Book[]) => {
-        this.books = books;
+      next: (res) => {
+        this.books = res.items;
+        this.total = res.total;
         this.loading = false;
       },
       error: (error: any) => {
@@ -281,7 +301,9 @@ export class StudentBooksComponent implements OnInit {
     return {
       search: this.searchControl.value || undefined,
       category: this.categoryControl.value || undefined,
-      status: this.statusControl.value || undefined
+      status: this.statusControl.value || undefined,
+      page: this.pageIndex + 1,
+      limit: this.pageSize
     };
   }
 
@@ -308,14 +330,39 @@ export class StudentBooksComponent implements OnInit {
       bookId: book.id,
       duration: duration
     }).subscribe({
-      next: () => {
-        this.toastr.success(`Successfully borrowed "${book.title}"`);
+      next: (res: any) => {
+        this.toastr.success(`Successfully borrowed \"${book.title}\"`);
         this.loadBooks(); // Refresh the list
+        this.loadMyBorrows(); // Refresh borrowed set to disable button
         this.borrowing = false;
+
+        // Show recommendations if available; otherwise fetch by category
+        const currentUserId = this.authService.currentUserValue?.id || undefined;
+        const recs = res?.recommendations as Book[] | undefined;
+        if (recs && recs.length) {
+          this.openRecommendations(recs);
+        } else if (book.category) {
+          this.bookService.getRecommendations({ category: book.category, limit: 12, studentId: currentUserId }).subscribe({
+            next: (books) => { if (books && books.length) this.openRecommendations(books); },
+          });
+        }
       },
       error: (error: any) => {
         this.toastr.error(error.error?.message || 'Failed to borrow book');
         this.borrowing = false;
+      }
+    });
+  }
+
+  private openRecommendations(books: Book[]) {
+    const dialogRef = this.dialog.open(RecommendationsDialogComponent, {
+      width: '720px',
+      data: { books }
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result?.book) {
+        this.borrowBook(result.book);
       }
     });
   }
@@ -353,5 +400,22 @@ export class StudentBooksComponent implements OnInit {
       return 'bg-orange-100 text-orange-700';
     }
     return 'bg-green-100 text-green-700';
+  }
+
+  onPage(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadBooks();
+  }
+
+  private loadMyBorrows() {
+    this.borrowService.getMyBorrows().subscribe({
+      next: (borrows: any[]) => {
+        const ids = borrows
+          .filter(b => b.status !== 'RETURNED' && b.book && b.book.id)
+          .map(b => b.book.id as string);
+        this.borrowedBookIds = new Set(ids);
+      }
+    });
   }
 }

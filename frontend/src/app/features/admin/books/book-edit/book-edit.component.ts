@@ -9,11 +9,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { ToastrService } from 'ngx-toastr';
 import { BookService } from '../../../../core/services/book.service';
+import { UploadService } from '../../../../core/services/upload.service';
+import { ImageUploadComponent } from '../../../../shared/components/image-upload/image-upload.component';
 
 @Component({
   selector: 'app-book-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, ImageUploadComponent],
   template: `
     <div class="p-6 max-w-3xl mx-auto" *ngIf="loaded">
       <div class="flex items-center justify-between mb-4">
@@ -66,10 +68,15 @@ import { BookService } from '../../../../core/services/book.service';
               <input matInput type="number" formControlName="publishedYear" />
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="md:col-span-2">
-              <mat-label>Cover Image URL</mat-label>
-              <input matInput formControlName="coverImageUrl" placeholder="https://..." />
-            </mat-form-field>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+              <app-image-upload 
+                [currentImageUrl]="form.get('coverImageUrl')?.value"
+                altText="Book cover"
+                (imageSelected)="onImageSelected($event)"
+                (imageRemoved)="onImageRemoved()">
+              </app-image-upload>
+            </div>
             <mat-form-field appearance="outline" class="md:col-span-2">
               <mat-label>Description</mat-label>
               <textarea matInput rows="3" formControlName="description"></textarea>
@@ -91,8 +98,9 @@ export class BookEditComponent implements OnInit {
   loaded = false;
   categories: string[] = [];
   id!: string;
+  private selectedFile: File | null = null;
 
-  constructor(private fb: FormBuilder, private books: BookService, private route: ActivatedRoute, private toastr: ToastrService, private router: Router) {
+  constructor(private fb: FormBuilder, private books: BookService, private uploadService: UploadService, private route: ActivatedRoute, private toastr: ToastrService, private router: Router) {
     this.form = this.fb.group({
       title: ['', Validators.required],
       author: ['', Validators.required],
@@ -123,10 +131,43 @@ export class BookEditComponent implements OnInit {
     if (this.form.invalid) return;
     this.loading = true;
     const { coverImageUrl, ...rest } = this.form.value;
-    const payload = { ...rest, coverImage: coverImageUrl } as any;
-    this.books.update(this.id, payload).subscribe({
-      next: () => { this.toastr.success('Book updated'); this.router.navigate(['/admin/books']); },
-      error: () => { this.loading = false; this.toastr.error('Failed to update book'); }
-    });
+    const payload = { ...rest } as any;
+
+    const afterUploadOrNoop = () => {
+      this.books.update(this.id, payload).subscribe({
+        next: () => { this.toastr.success('Book updated'); this.router.navigate(['/admin/books']); },
+        error: () => { this.loading = false; this.toastr.error('Failed to update book'); }
+      });
+    };
+
+    if (this.selectedFile) {
+      this.uploadService.uploadBookCover(this.id, this.selectedFile).subscribe({
+        next: (res) => {
+          // Patch preview with the uploaded URL if backend returns it
+          if (res?.imageUrl) this.form.patchValue({ coverImageUrl: res.imageUrl });
+          afterUploadOrNoop();
+        },
+        error: () => {
+          this.loading = false;
+          this.toastr.error('Failed to upload cover image');
+        }
+      });
+    } else {
+      afterUploadOrNoop();
+    }
+  }
+
+  onImageSelected(file: File) {
+    this.selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.form.patchValue({ coverImageUrl: e.target?.result as string });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  onImageRemoved() {
+    this.selectedFile = null;
+    this.form.patchValue({ coverImageUrl: '' });
   }
 }

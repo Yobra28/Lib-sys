@@ -62,10 +62,28 @@ export class BooksService {
       where.status = filterDto.status;
     }
 
-    return this.prisma.book.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
+    const page = Math.max(1, Number((filterDto as any)?.page ?? 1));
+    const limitRaw = Number((filterDto as any)?.limit ?? 12);
+    const limit = Math.max(1, Math.min(100, isNaN(limitRaw) ? 12 : limitRaw));
+    const skip = (page - 1) * limit;
+
+    const [total, items] = await Promise.all([
+      this.prisma.book.count({ where }),
+      this.prisma.book.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string) {
@@ -156,12 +174,9 @@ export class BooksService {
       availableCopies: { gt: 0 },
     };
 
-    // Optionally exclude books the student has already borrowed (any status)
     if (studentId) {
       where.NOT = {
-        borrows: {
-          some: { userId: studentId },
-        },
+        borrows: { some: { userId: studentId } },
       };
     }
 
@@ -177,10 +192,54 @@ export class BooksService {
         _count: { select: { borrows: true } },
       },
       orderBy: [
-        { borrows: { _count: 'desc' } }, // popularity by borrow count
+        { borrows: { _count: 'desc' } },
         { createdAt: 'desc' },
       ],
       take: typeof limit === 'number' ? limit : Number(limit),
     });
+  }
+
+  // Recommend after a borrow event: prioritize same author in same category, then popular in category
+  async recommendForBorrow(params: { studentId: string; borrowedBookId: string; limit?: number }) {
+    const { studentId, borrowedBookId, limit = 12 } = params;
+
+    const borrowed = await this.prisma.book.findUnique({
+      where: { id: borrowedBookId },
+      select: { id: true, category: true, author: true },
+    });
+    if (!borrowed) return [];
+
+    const takenIds = new Set<string>();
+
+    // 1) Same author in same category
+    const sameAuthor = await this.prisma.book.findMany({
+      where: {
+        id: { not: borrowed.id },
+        category: { equals: borrowed.category, mode: 'insensitive' },
+        author: borrowed.author,
+        availableCopies: { gt: 0 },
+        NOT: { borrows: { some: { userId: studentId } } },
+      },
+      select: { id: true, title: true, author: true, coverImage: true, category: true, availableCopies: true, _count: { select: { borrows: true } } },
+      orderBy: [{ borrows: { _count: 'desc' } }, { createdAt: 'desc' }],
+      take: Math.max(3, Math.floor(limit / 3)),
+    });
+    sameAuthor.forEach(b => takenIds.add(b.id));
+
+    // 2) Popular in same category (excluding above)
+    const remaining = limit - sameAuthor.length;
+    const popularInCategory = remaining > 0 ? await this.prisma.book.findMany({
+      where: {
+        id: { notIn: [borrowed.id, ...Array.from(takenIds)] },
+        category: { equals: borrowed.category, mode: 'insensitive' },
+        availableCopies: { gt: 0 },
+        NOT: { borrows: { some: { userId: studentId } } },
+      },
+      select: { id: true, title: true, author: true, coverImage: true, category: true, availableCopies: true, _count: { select: { borrows: true } } },
+      orderBy: [{ borrows: { _count: 'desc' } }, { createdAt: 'desc' }],
+      take: remaining,
+    }) : [];
+
+    return [...sameAuthor, ...popularInCategory];
   }
 }

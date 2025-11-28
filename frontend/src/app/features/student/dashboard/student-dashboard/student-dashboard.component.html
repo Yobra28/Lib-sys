@@ -166,5 +166,68 @@
         </div>
       </div>
     </div>
+
+    <!-- AI Recommendations Section -->
+    <div class="mt-8">
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-100 shadow-lg">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <span>🤖</span>
+              AI Recommendations for You
+            </h3>
+            <p class="text-sm text-slate-600 mt-1">Personalized book suggestions based on your reading history</p>
+          </div>
+          <button 
+            *ngIf="aiRecommendations.length > 0"
+            (click)="loadAiRecommendations()" 
+            class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+            Refresh
+          </button>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loadingAiRecommendations" class="flex justify-center items-center py-12">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+
+        <!-- Recommendations Grid -->
+        <div *ngIf="!loadingAiRecommendations && aiRecommendations.length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div *ngFor="let book of aiRecommendations" 
+               class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100 hover:shadow-md transition-all">
+            <div class="flex items-start gap-3">
+              <div class="w-16 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span class="text-white text-2xl">📖</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-semibold text-slate-900 truncate">{{ book.title }}</h4>
+                <p class="text-sm text-slate-600 truncate">{{ book.author }}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ book.category }}</p>
+                <div *ngIf="book.aiReason" class="mt-2 p-2 bg-white/60 rounded text-xs text-slate-700 italic">
+                  "{{ book.aiReason }}"
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                  <span class="text-xs text-slate-500">
+                    {{ book.availableCopies }} available
+                  </span>
+                  <a [routerLink]="['/student/books']" 
+                     class="text-xs text-indigo-600 hover:text-indigo-700 font-medium ml-auto">
+                    View →
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loadingAiRecommendations && aiRecommendations.length === 0" 
+             class="text-center py-12 text-slate-500">
+          <span class="text-4xl">🤖</span>
+          <p class="mt-4">No AI recommendations available yet</p>
+          <p class="text-sm mt-2">Borrow some books to get personalized recommendations!</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

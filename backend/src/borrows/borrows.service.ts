@@ -12,6 +12,7 @@ import { PayFineDto } from './dto/pay-fine.dto';
 import { UpdateFineConfigurationDto } from './dto/update-fine-configuration.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationsService } from '../notifications/notifications.service';
+import { BooksService } from '../books/books.service';
 
 @Injectable()
 export class BorrowsService {
@@ -19,6 +20,7 @@ export class BorrowsService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private notificationsService: NotificationsService,
+    private booksService: BooksService,
   ) {}
 
   async create(createBorrowDto: CreateBorrowDto) {
@@ -28,6 +30,11 @@ export class BorrowsService {
 
     if (!book) {
       throw new NotFoundException('Book not found');
+    }
+
+    // Disallow borrowing unless book is AVAILABLE and has copies
+    if (book.status !== 'AVAILABLE') {
+      throw new BadRequestException(`Book cannot be borrowed. Current status: ${book.status}`);
     }
 
     if (book.availableCopies <= 0) {
@@ -98,7 +105,14 @@ export class BorrowsService {
     // Send email notification for successful borrow
     await this.notificationsService.sendBorrowConfirmation(borrow.id);
 
-    return borrow;
+    // Compute recommendations for the student based on this borrow
+    const recommendations = await this.booksService.recommendForBorrow({
+      studentId: createBorrowDto.userId,
+      borrowedBookId: createBorrowDto.bookId,
+      limit: 12,
+    });
+
+    return { borrow, recommendations } as any;
   }
 
   async findAll(userId?: string) {

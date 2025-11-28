@@ -303,6 +303,9 @@ export class BooksListComponent implements OnInit {
   displayedColumns: string[] = ['title', 'author', 'isbn', 'category', 'copies', 'status', 'actions'];
   dataSource!: MatTableDataSource<Book>;
   categories: string[] = [];
+  total = 0;
+  pageSize = 10;
+  pageIndex = 0;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -323,12 +326,18 @@ export class BooksListComponent implements OnInit {
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+    this.paginator.page.subscribe(() => {
+      this.pageIndex = this.paginator.pageIndex;
+      this.pageSize = this.paginator.pageSize;
+      this.loadBooks();
+    });
   }
 
   loadBooks() {
-    this.bookService.getAll().subscribe({
-      next: (books) => {
-        this.dataSource.data = books;
+    this.bookService.getAll({ page: this.pageIndex + 1, limit: this.pageSize }).subscribe({
+      next: (res) => {
+        this.dataSource.data = res.items;
+        this.total = res.total;
       },
       error: (error) => {
         this.toastr.error('Failed to load books');

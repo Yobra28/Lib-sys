@@ -1,0 +1,299 @@
+{
+  "public": [
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "roles": ["PUBLIC"],
+      "description": "Register new student account",
+      "notes": "Students self-register"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "roles": ["PUBLIC"],
+      "description": "Authenticate and receive JWT"
+    },
+    {
+      "method": "GET",
+      "path": "/books",
+      "roles": ["PUBLIC"],
+      "description": "List/search books with optional filters"
+    },
+    {
+      "method": "GET",
+      "path": "/books/:id",
+      "roles": ["PUBLIC"],
+      "description": "Get book details"
+    },
+    {
+      "method": "GET",
+      "path": "/books/categories",
+      "roles": ["PUBLIC"],
+      "description": "List book categories"
+    }
+  ],
+  "student": [
+    {
+      "method": "GET",
+      "path": "/auth/profile",
+      "roles": ["STUDENT"],
+      "description": "Get authenticated user profile"
+    },
+    {
+      "method": "PATCH",
+      "path": "/auth/profile",
+      "roles": ["STUDENT"],
+      "description": "Update own profile"
+    },
+    {
+      "method": "POST",
+      "path": "/borrows/self",
+      "roles": ["STUDENT"],
+      "description": "Borrow a book as student (self-borrow)"
+    },
+    {
+      "method": "GET",
+      "path": "/borrows/my-borrows",
+      "roles": ["STUDENT"],
+      "description": "List my borrowed books"
+    },
+    {
+      "method": "PATCH",
+      "path": "/borrows/:id/return-self",
+      "roles": ["STUDENT"],
+      "description": "Return a borrowed book (student)",
+      "notes": "Input: ReturnBookDto"
+    },
+    {
+      "method": "POST",
+      "path": "/borrows/pay-fine",
+      "roles": ["STUDENT"],
+      "description": "Pay a fine"
+    },
+    {
+      "method": "GET",
+      "path": "/borrows/my-fines",
+      "roles": ["STUDENT"],
+      "description": "View my fines"
+    },
+    {
+      "method": "POST",
+      "path": "/reservations",
+      "roles": ["STUDENT"],
+      "description": "Create seat reservation"
+    },
+    {
+      "method": "GET",
+      "path": "/reservations/my-reservations",
+      "roles": ["STUDENT"],
+      "description": "Get my reservations (supports pagination)"
+    },
+    {
+      "method": "POST",
+      "path": "/feedback",
+      "roles": ["STUDENT"],
+      "description": "Submit feedback"
+    },
+    {
+      "method": "GET",
+      "path": "/feedback/my-feedback",
+      "roles": ["STUDENT"],
+      "description": "List my submitted feedback"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/my-notifications",
+      "roles": ["STUDENT"],
+      "description": "Get my notifications"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/unread-count",
+      "roles": ["STUDENT"],
+      "description": "Get unread notification count"
+    },
+    {
+      "method": "PATCH",
+      "path": "/notifications/:id/read",
+      "roles": ["STUDENT"],
+      "description": "Mark a notification as read"
+    }
+  ],
+  "admin_librarian": [
+    {
+      "method": "POST",
+      "path": "/users",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Create new user (Admin/Librarian)"
+    },
+    {
+      "method": "GET",
+      "path": "/users",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "List users with filters"
+    },
+    {
+      "method": "PATCH",
+      "path": "/users/:id",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Update user"
+    },
+    {
+      "method": "PATCH",
+      "path": "/users/:id/activate",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Activate user account"
+    },
+    {
+      "method": "PATCH",
+      "path": "/users/:id/deactivate",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Deactivate user account"
+    },
+    {
+      "method": "DELETE",
+      "path": "/users/:id",
+      "roles": ["ADMIN"],
+      "description": "Delete user (Admin only)"
+    },
+    {
+      "method": "POST",
+      "path": "/books",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Create new book"
+    },
+    {
+      "method": "PATCH",
+      "path": "/books/:id",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Update book"
+    },
+    {
+      "method": "DELETE",
+      "path": "/books/:id",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Delete book"
+    },
+    {
+      "method": "POST",
+      "path": "/books/:id/upload-cover",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Upload book cover (per-book)"
+    },
+    {
+      "method": "POST",
+      "path": "/upload/book-cover",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Upload book cover (central upload endpoint)"
+    },
+    {
+      "method": "POST",
+      "path": "/borrows",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Issue book to a student"
+    },
+    {
+      "method": "GET",
+      "path": "/borrows",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "List all borrow records"
+    },
+    {
+      "method": "PATCH",
+      "path": "/borrows/:id/return",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Mark borrow as returned"
+    },
+    {
+      "method": "POST",
+      "path": "/borrows/fine-configuration",
+      "roles": ["ADMIN"],
+      "description": "Update fine configuration"
+    },
+    {
+      "method": "GET",
+      "path": "/fines",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "List fines"
+    },
+    {
+      "method": "PATCH",
+      "path": "/fines/:id/pay",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Mark fine as paid"
+    },
+    {
+      "method": "PATCH",
+      "path": "/fines/:id/waive",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Waive fine"
+    },
+    {
+      "method": "GET",
+      "path": "/reservations",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "List reservations"
+    },
+    {
+      "method": "PATCH",
+      "path": "/reservations/:id/approve",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Approve reservation"
+    },
+    {
+      "method": "POST",
+      "path": "/seats",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Add a seat"
+    },
+    {
+      "method": "PATCH",
+      "path": "/seats/:id",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Update seat"
+    },
+    {
+      "method": "DELETE",
+      "path": "/seats/:id",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Delete seat"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Create notification"
+    },
+    {
+      "method": "GET",
+      "path": "/feedback",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "List all feedback"
+    },
+    {
+      "method": "PATCH",
+      "path": "/feedback/:id/respond",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Respond to feedback"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/*",
+      "roles": ["ADMIN","LIBRARIAN"],
+      "description": "Access reporting endpoints (dashboard, most-borrowed, trends, seat heatmap, etc.)"
+    },
+    {
+      "method": "PATCH",
+      "path": "/settings",
+      "roles": ["ADMIN"],
+      "description": "Update system settings"
+    }
+  ],
+  "notes": {
+    "todo": [
+      "Verify missing guards for endpoints that currently lack Roles decorators (renew, calculate-fine, cancel reservation, etc.)",
+      "Add password reset & email verification flow if required",
+      "Add rate limiting and payment provider integration for pay-fine endpoint if not present"
+    ]
+  }
+}
