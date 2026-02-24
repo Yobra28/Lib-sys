@@ -32,7 +32,7 @@ import { Fine } from '../../../../core/models/fine.model';
           <mat-card-content class="flex items-center justify-between">
             <div>
               <p class="text-gray-600 text-sm">Total Fines</p>
-              <p class="text-3xl font-bold text-red-600">\${{totalFines}}</p>
+              <p class="text-3xl font-bold text-red-600">KES {{totalFines}}</p>
             </div>
             <mat-icon class="text-5xl text-red-200">attach_money</mat-icon>
           </mat-card-content>
@@ -42,7 +42,7 @@ import { Fine } from '../../../../core/models/fine.model';
           <mat-card-content class="flex items-center justify-between">
             <div>
               <p class="text-gray-600 text-sm">Pending Fines</p>
-              <p class="text-3xl font-bold text-orange-600">\${{pendingFines}}</p>
+              <p class="text-3xl font-bold text-orange-600">KES {{pendingFines}}</p>
             </div>
             <mat-icon class="text-5xl text-orange-200">warning</mat-icon>
           </mat-card-content>
@@ -52,7 +52,7 @@ import { Fine } from '../../../../core/models/fine.model';
           <mat-card-content class="flex items-center justify-between">
             <div>
               <p class="text-gray-600 text-sm">Paid Fines</p>
-              <p class="text-3xl font-bold text-green-600">\${{paidFines}}</p>
+              <p class="text-3xl font-bold text-green-600">KES {{paidFines}}</p>
             </div>
             <mat-icon class="text-5xl text-green-200">check_circle</mat-icon>
           </mat-card-content>
@@ -97,7 +97,7 @@ import { Fine } from '../../../../core/models/fine.model';
             <ng-container matColumnDef="amount">
               <th mat-header-cell *matHeaderCellDef>Amount</th>
               <td mat-cell *matCellDef="let fine">
-                <span class="text-red-600 font-semibold">\${{fine.amount}}</span>
+                <span class="text-red-600 font-semibold">KES {{fine.amount}}</span>
               </td>
             </ng-container>
 
@@ -133,7 +133,7 @@ import { Fine } from '../../../../core/models/fine.model';
             <div class="flex-1">
               <h3 class="font-semibold text-lg mb-2">Payment Required</h3>
               <p class="text-gray-600 mb-4">
-                You have <span class="font-semibold text-orange-600">\${{pendingFines}}</span> in pending fines. 
+                You have <span class="font-semibold text-orange-600">KES {{pendingFines}}</span> in pending fines. Pay when returning the related book via M-Pesa. 
                 Please contact the library admin to arrange payment.
               </p>
               <button mat-raised-button color="accent">
@@ -182,11 +182,18 @@ export class MyFinesComponent implements OnInit {
 
 
   calculateTotals() {
-    this.totalFines = this.fines.reduce((sum, fine) => sum + fine.amount, 0);
-    this.paidFines = (this.fines || [])
+    const allFines = this.fines || [];
+
+    // Exclude waived fines from totals, since they are no longer owed
+    this.totalFines = allFines
+      .filter((f: any) => f.status !== 'WAIVED')
+      .reduce((sum: number, fine: any) => sum + fine.amount, 0);
+
+    this.paidFines = allFines
       .filter((f: any) => f.status === 'PAID')
       .reduce((sum: number, fine: any) => sum + fine.amount, 0);
-    this.pendingFines = (this.fines || [])
+
+    this.pendingFines = allFines
       .filter((f: any) => f.status === 'PENDING')
       .reduce((sum: number, fine: any) => sum + fine.amount, 0);
   }

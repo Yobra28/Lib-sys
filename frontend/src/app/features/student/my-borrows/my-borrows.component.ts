@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,12 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
-import { BorrowService, BorrowDuration } from '../../../core/services/borrow.service';
+import { BorrowService, BorrowDuration, ReturnPaymentRequired, ReturnStatusResponse } from '../../../core/services/borrow.service';
 import { Borrow, Fine } from '../../../core/models/borrow.model';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-my-borrows',
@@ -24,6 +26,7 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
     MatChipsModule,
     MatDialogModule,
     MatFormFieldModule,
+    MatInputModule,
     MatSelectModule,
     MatProgressSpinnerModule,
     ReactiveFormsModule
@@ -56,13 +59,13 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
                   <div>
                     <p class="text-sm text-gray-500">Borrowed Date</p>
                     <p class="font-semibold">{{borrow.borrowDate | date:'medium'}}</p>
-                </div>
-                      <div>
+                  </div>
+                  <div>
                     <p class="text-sm text-gray-500">Due Date</p>
                     <p class="font-semibold" [class.text-red-600]="isOverdue(borrow)">
                       {{borrow.dueDate | date:'medium'}}
                     </p>
-                      </div>
+                  </div>
                   <div>
                     <p class="text-sm text-gray-500">Status</p>
                     <mat-chip-set>
@@ -70,28 +73,6 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
                         {{borrow.status}}
                       </mat-chip>
                     </mat-chip-set>
-              </div>
-                </div>
-
-                <!-- Fine Information -->
-                <div *ngIf="borrow.fines && borrow.fines.length > 0" class="bg-red-50 p-4 rounded-lg mb-4">
-                  <div class="flex items-center gap-2 mb-2">
-                    <mat-icon class="text-red-500">warning</mat-icon>
-                    <span class="font-semibold text-red-800">Outstanding Fines</span>
-                  </div>
-                  <div *ngFor="let fine of borrow.fines" class="flex justify-between items-center">
-                      <div>
-                      <p class="text-sm text-red-700">{{fine.reason}}</p>
-                      <p class="text-xs text-red-600">Created: {{fine.createdAt | date:'short'}}</p>
-                      </div>
-                    <div class="text-right">
-                      <p class="font-bold text-red-800">₹{{fine.amount}}</p>
-                      <mat-chip-set>
-                        <mat-chip [class]="getFineStatusClass(fine.status)">
-                          {{fine.status}}
-                        </mat-chip>
-                      </mat-chip-set>
-                    </div>
                   </div>
                 </div>
 
@@ -112,11 +93,11 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
                      class="bg-blue-50 p-4 rounded-lg mb-4">
                   <div class="flex items-center gap-2 mb-2">
                     <mat-icon class="text-blue-500">schedule</mat-icon>
-                    <span class="font-semibold text-blue-800">Overdue - Auto-Pay Available</span>
+                    <span class="font-semibold text-blue-800">Overdue - Pay via M-Pesa to return</span>
                   </div>
                   <p class="text-sm text-blue-700">
-                    This book is overdue. Fines will be automatically calculated and paid when you return it.
-                    Current fine rate: ₹50 per day.
+                    This book is overdue. When you return, you will pay the fine via M-Pesa (STK push) to complete the return.
+                    Current fine rate: KES 50 per day. Pay via M-Pesa when you return.
                   </p>
                 </div>
               </div>
@@ -126,16 +107,17 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
                 <button 
                   *ngIf="borrow.status === 'ACTIVE'"
                   mat-raised-button 
-                  [color]="hasPendingFines(borrow) ? 'warn' : 'primary'"
+                  [color]="(isOverdue(borrow) || hasPendingFines(borrow)) ? 'warn' : 'primary'"
                   (click)="returnBook(borrow)">
                   <mat-icon>keyboard_return</mat-icon>
-                  {{hasPendingFines(borrow) ? 'Return (Auto-pay fines)' : 'Return Book'}}
+                  {{(isOverdue(borrow) || hasPendingFines(borrow)) ? 'Return (Pay fine via M-Pesa)' : 'Return Book'}}
                 </button>
 
                 <button 
                   *ngIf="borrow.status === 'ACTIVE'"
                   mat-button
-                  (click)="renewBook(borrow)">
+                  (click)="renewBook(borrow)"
+                  [disabled]="!canRenew(borrow).allowed">
                   <mat-icon>refresh</mat-icon>
                   {{canRenew(borrow).allowed ? 'Renew' : 'Renew (Not Yet)'}}
                 </button>
@@ -161,7 +143,8 @@ export class MyBorrowsComponent implements OnInit {
   constructor(
     private borrowService: BorrowService,
     private toastr: ToastrService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -218,30 +201,42 @@ export class MyBorrowsComponent implements OnInit {
   }
 
   returnBook(borrow: Borrow) {
-    if (confirm(`Are you sure you want to return "${borrow.book?.title}"?`)) {
-    this.borrowService.returnBook(borrow.id).subscribe({
+    const dialogRef = this.dialog.open(ReturnBookDialogComponent, {
+      width: '420px',
+      data: {
+        bookTitle: borrow.book?.title,
+        hasPossibleFine: this.isOverdue(borrow) || this.hasPendingFines(borrow),
+      },
+    });
+    dialogRef.afterClosed().subscribe((payload: { phone?: string } | undefined) => {
+      if (payload === undefined) return;
+      this.borrowService.returnBook(borrow.id).subscribe({
         next: (response: any) => {
-          // Check if automatic fine was paid
-          if (response.automaticFinePaid) {
-            this.toastr.success(
-              response.automaticFinePaid.message,
-              'Book returned with automatic fine payment',
-              { timeOut: 5000 }
-            );
+          if (response.requiresPayment && (response as ReturnPaymentRequired).checkoutRequestId) {
+            const pay = response as ReturnPaymentRequired;
+            this.toastr.info(pay.message, 'M-Pesa payment');
+            this.dialog.open(ReturnPaymentPendingDialogComponent, {
+              width: '400px',
+              disableClose: true,
+              data: { borrowId: borrow.id, amount: pay.amount, currency: pay.currency },
+            }).afterClosed().subscribe(() => this.loadBorrows());
           } else {
-          this.toastr.success('Book returned successfully');
+            this.toastr.success('Book returned successfully');
+            this.loadBorrows();
           }
-          this.loadBorrows();
         },
         error: (error: any) => {
           this.toastr.error(error.error?.message || 'Failed to return book');
-        }
+        },
+      });
     });
   }
-}
-
 
   canRenew(borrow: Borrow): { allowed: boolean; message?: string; daysUntil?: number } {
+    if (this.hasPendingFines(borrow)) {
+      return { allowed: false, message: 'You have outstanding fines for this book. Please pay them before renewing.' };
+    }
+
     if (borrow.status !== 'ACTIVE') {
       return { allowed: false, message: 'Only active borrows can be renewed' };
     }
@@ -349,5 +344,92 @@ export class RenewBookDialogComponent {
 
   confirm() {
     this.dialogRef.close(this.durationControl.value);
+  }
+}
+
+// Return Book Dialog – uses profile phone for M-Pesa
+@Component({
+  selector: 'app-return-book-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  template: `
+    <div class="p-6">
+      <h2 class="text-xl font-bold mb-4">Return book</h2>
+      <p class="text-gray-600 mb-4">Return <strong>{{ data.bookTitle }}</strong>?</p>
+      <p *ngIf="data.hasPossibleFine" class="text-sm text-amber-700 mb-4">
+        This book may have a fine. We will send an M-Pesa STK push to the phone number saved in your profile to pay before completing the return.
+      </p>
+      <div class="flex justify-end gap-2 mt-4">
+        <button mat-button (click)="dialogRef.close()">Cancel</button>
+        <button mat-raised-button color="primary" (click)="confirm()">Return book</button>
+      </div>
+    </div>
+  `
+})
+export class ReturnBookDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<ReturnBookDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { bookTitle: string; hasPossibleFine: boolean }
+  ) {}
+
+  confirm() {
+    this.dialogRef.close({});
+  }
+}
+
+// Payment pending – poll until return completed or failed
+@Component({
+  selector: 'app-return-payment-pending-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatProgressSpinnerModule],
+  template: `
+    <div class="p-6 text-center">
+      <h2 class="text-xl font-bold mb-2">Complete payment</h2>
+      <p class="text-gray-600 mb-4">{{ amount }} {{ currency }} – Check your phone and enter your M-Pesa PIN.</p>
+      <mat-spinner diameter="40" class="mx-auto mb-4" *ngIf="!error && !success"></mat-spinner>
+      <p *ngIf="!error && !success" class="text-sm text-gray-500">Waiting for payment…</p>
+      <p *ngIf="success" class="text-green-600 font-semibold">Return completed. You can close this.</p>
+      <p *ngIf="error" class="text-red-600 font-semibold">{{ error }}</p>
+      <button *ngIf="success || error" mat-raised-button (click)="dialogRef.close()">Close</button>
+    </div>
+  `
+})
+export class ReturnPaymentPendingDialogComponent implements OnInit, OnDestroy {
+  amount = 0;
+  currency = 'KES';
+  success = false;
+  error = '';
+  private pollInterval: any;
+
+  constructor(
+    private borrowService: BorrowService,
+    public dialogRef: MatDialogRef<ReturnPaymentPendingDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { borrowId: string; amount: number; currency: string }
+  ) {
+    this.amount = data.amount;
+    this.currency = data.currency || 'KES';
+  }
+
+  ngOnInit() {
+    this.pollInterval = setInterval(() => this.check(), 3000);
+    this.check();
+  }
+
+  ngOnDestroy() {
+    if (this.pollInterval) clearInterval(this.pollInterval);
+  }
+
+  check() {
+    this.borrowService.getReturnStatus(this.data.borrowId).subscribe({
+      next: (res: ReturnStatusResponse) => {
+        if (res.returnStatus === 'returned') {
+          this.success = true;
+          if (this.pollInterval) clearInterval(this.pollInterval);
+        } else if (res.paymentStatus === 'failed') {
+          this.error = 'Payment cancelled / failed. Please try returning again.';
+          if (this.pollInterval) clearInterval(this.pollInterval);
+        }
+      },
+    });
   }
 }

@@ -103,7 +103,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       <ng-container *ngIf="!loading && books.length > 0">
         <!-- Grid view -->
         <div *ngIf="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <mat-card *ngFor="let book of books" class="hover:shadow-xl transition-shadow overflow-hidden">
+          <mat-card *ngFor="let book of books" class="hover:shadow-xl transition-shadow overflow-hidden flex flex-col">
             <ng-container *ngIf="getCoverUrl(book) as cover; else noCoverGrid">
               <img [src]="cover" alt="{{book.title}} cover" class="w-full h-48 object-cover" loading="lazy" (error)="onImageError($event)">
             </ng-container>
@@ -112,22 +112,24 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
                 <mat-icon class="text-white text-8xl">book</mat-icon>
               </div>
             </ng-template>
-            
-            <mat-card-content class="pt-4">
-              <h3 class="font-bold text-lg mb-2 line-clamp-2">{{book.title}}</h3>
-              <p class="text-sm text-gray-600 mb-2">{{book.author}}</p>
-              <p class="text-xs text-gray-500 mb-1">{{book.category}} • {{book.publishedYear}}</p>
-              <p class="text-xs text-gray-500 mb-3">ISBN: {{book.isbn}}</p>
-              
-              <div class="flex justify-between items-center mb-3">
-                <mat-chip-set>
-                  <mat-chip [class]="getStatusClass(book)">
-                    {{book.availableCopies}} / {{book.totalCopies}} Available
-                  </mat-chip>
-                </mat-chip-set>
+
+            <mat-card-content class="pt-4 flex flex-col flex-1">
+              <div class="flex-1">
+                <h3 class="font-bold text-lg mb-2 line-clamp-2">{{book.title}}</h3>
+                <p class="text-sm text-gray-600 mb-2 line-clamp-1">{{book.author}}</p>
+                <p class="text-xs text-gray-500 mb-1 line-clamp-1">{{book.category}} • {{book.publishedYear}}</p>
+                <p class="text-xs text-gray-500 mb-3 line-clamp-1">ISBN: {{book.isbn}}</p>
+                
+                <div class="flex justify-between items-center mb-3">
+                  <mat-chip-set>
+                    <mat-chip [class]="getStatusClass(book)">
+                      {{book.availableCopies}} / {{book.totalCopies}} Available
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
               </div>
 
-              <div class="flex gap-2">
+              <div class="flex gap-2 mt-auto pt-2">
                 <button mat-raised-button color="primary" 
                         [disabled]="book.availableCopies === 0 || book.status !== 'AVAILABLE' || borrowedBookIds.has(book.id) || borrowing"
                         (click)="borrowBook(book)"

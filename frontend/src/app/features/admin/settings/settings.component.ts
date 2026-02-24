@@ -37,7 +37,7 @@ import { ToastrService } from 'ngx-toastr';
               <input matInput formControlName="libraryName" placeholder="Smart Library" />
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Fine Rate Per Day ($)</mat-label>
+              <mat-label>Fine Rate Per Day (KES)</mat-label>
               <input matInput type="number" formControlName="fineRatePerDay" />
               <mat-hint>Fine rate charged per day for overdue books</mat-hint>
             </mat-form-field>

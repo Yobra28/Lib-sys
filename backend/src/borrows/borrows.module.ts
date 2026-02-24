@@ -5,6 +5,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BooksModule } from '../books/books.module';
+import { PaymentModule } from '../payment/payment.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { BooksModule } from '../books/books.module';
     ConfigModule,
     NotificationsModule,
     BooksModule,
+    PaymentModule,
   ],
   controllers: [BorrowsController],
   providers: [BorrowsService],

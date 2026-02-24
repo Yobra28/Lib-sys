@@ -6,7 +6,7 @@ import { CurrencyPipe } from '@angular/common';
   standalone: true
 })
 export class CurrencyFormatPipe implements PipeTransform {
-  transform(value: number, currencyCode: string = 'USD', display: 'code' | 'symbol' | 'symbol-narrow' = 'symbol'): string | null {
+  transform(value: number, currencyCode: string = 'KES', display: 'code' | 'symbol' | 'symbol-narrow' = 'symbol'): string | null {
     const currencyPipe = new CurrencyPipe('en-US');
     return currencyPipe.transform(value, currencyCode, display);
   }

@@ -18,6 +18,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AiAgentService } from './ai/ai-agent.service';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AiAgentService } from './ai/ai-agent.service';
     UsersModule,
     BooksModule,
     BorrowsModule,
+    PaymentModule,
     SeatsModule,
     ReservationsModule,
     FinesModule,

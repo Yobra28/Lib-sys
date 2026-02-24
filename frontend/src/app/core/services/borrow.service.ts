@@ -32,6 +32,22 @@ export interface FineConfiguration {
   updatedAt: string;
 }
 
+export interface ReturnPaymentRequired {
+  requiresPayment: true;
+  checkoutRequestId: string;
+  amount: number;
+  currency: string;
+  message: string;
+}
+
+export interface ReturnStatusResponse {
+  returnStatus: 'pending' | 'returned';
+  paymentStatus: 'none' | 'pending' | 'completed' | 'failed';
+  amount?: number;
+  currency: string;
+  checkoutRequestId?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BorrowService {
   private apiUrl = `${environment.apiUrl}/borrows`;
@@ -61,8 +77,12 @@ export class BorrowService {
     return this.http.post<Borrow>(`${this.apiUrl}/self`, data);
   }
 
-  returnBook(id: string, notes?: string): Observable<Borrow> {
-    return this.http.patch<Borrow>(`${this.apiUrl}/${id}/return-self`, { notes });
+  returnBook(id: string, body?: { notes?: string; phone?: string }): Observable<Borrow | ReturnPaymentRequired> {
+    return this.http.patch<Borrow | ReturnPaymentRequired>(`${this.apiUrl}/${id}/return-self`, body || {});
+  }
+
+  getReturnStatus(borrowId: string): Observable<ReturnStatusResponse> {
+    return this.http.get<ReturnStatusResponse>(`${this.apiUrl}/${borrowId}/return-status`);
   }
 
   renewBook(id: string, duration: BorrowDuration): Observable<Borrow> {

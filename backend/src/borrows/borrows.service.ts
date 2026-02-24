@@ -13,6 +13,8 @@ import { UpdateFineConfigurationDto } from './dto/update-fine-configuration.dto'
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationsService } from '../notifications/notifications.service';
 import { BooksService } from '../books/books.service';
+import { MpesaService } from '../payment/mpesa.service';
+import { PaymentRequestService } from '../payment/payment-request.service';
 
 @Injectable()
 export class BorrowsService {
@@ -21,6 +23,8 @@ export class BorrowsService {
     private configService: ConfigService,
     private notificationsService: NotificationsService,
     private booksService: BooksService,
+    private mpesaService: MpesaService,
+    private paymentRequestService: PaymentRequestService,
   ) {}
 
   async create(createBorrowDto: CreateBorrowDto) {
@@ -169,7 +173,6 @@ export class BorrowsService {
   async returnBook(id: string, returnBookDto: ReturnBookDto, userId?: string) {
     const borrow = await this.findOne(id);
 
-    // If userId is provided, check that the user can only return their own books
     if (userId && borrow.userId !== userId) {
       throw new BadRequestException('You can only return your own books');
     }
@@ -181,126 +184,130 @@ export class BorrowsService {
     const returnDate = new Date();
     const dueDate = new Date(borrow.dueDate);
     const isOverdue = returnDate > dueDate;
-
-    // For student self-returns: Automatically handle fines
     const isStudentReturn = !!userId;
-    let fine: any = null;
 
-    if (isOverdue) {
-      const daysOverdue = Math.ceil((returnDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-      const dailyRate = await this.getCurrentFineRate();
-      const fineAmount = daysOverdue * dailyRate;
+    // Pending fines for this borrow (normally created/updated by scheduler)
+    let fineIds: string[] = [];
+    let totalAmount = 0;
 
-      if (isStudentReturn) {
-        // For student returns: Automatically create and pay the fine
-        fine = await this.prisma.fine.create({
-          data: {
-            userId: borrow.userId,
-            borrowId: borrow.id,
-            amount: fineAmount,
-            reason: `Overdue by ${daysOverdue} day(s)`,
-            status: 'PAID', // Automatically mark as paid
-            paidDate: returnDate,
-          },
-        });
-      } else {
-        // For admin/librarian returns: Create fine and block return
-        fine = await this.prisma.fine.create({
-          data: {
-            userId: borrow.userId,
-            borrowId: borrow.id,
-            amount: fineAmount,
-            reason: `Overdue by ${daysOverdue} day(s)`,
-          },
-        });
+    let pendingFines = await this.prisma.fine.findMany({
+      where: { borrowId: borrow.id, status: 'PENDING' },
+    });
 
-        // Block return for admin/librarian until manual payment
-        throw new BadRequestException(
-          `Book is overdue by ${daysOverdue} day(s). Please pay fine of ${fineAmount} before returning.`
-        );
-      }
-    } else {
-      // Check if there are any pending fines for non-overdue returns
-      const pendingFines = await this.prisma.fine.findMany({
-        where: {
-          borrowId: borrow.id,
-          status: 'PENDING'
-        }
+    // Fallback: if book is overdue but scheduler hasn't yet created a fine,
+    // compute and create the fine now so the student can pay on return.
+    // However, if the latest fine was WAIVED or PAID, we should *not*
+    // recreate a pending fine – the admin has cleared it.
+    if (pendingFines.length === 0 && isOverdue) {
+      const latestFine = await this.prisma.fine.findFirst({
+        where: { borrowId: borrow.id, userId: borrow.userId },
+        orderBy: { createdAt: 'desc' },
       });
 
-      if (pendingFines.length > 0) {
-        const totalPendingAmount = pendingFines.reduce((sum, fine) => sum + fine.amount, 0);
-        
-        if (isStudentReturn) {
-          // For student returns: Automatically pay all pending fines
-          await this.prisma.fine.updateMany({
-            where: {
-              borrowId: borrow.id,
-              status: 'PENDING'
-            },
-            data: {
-              status: 'PAID',
-              paidDate: returnDate,
-            }
-          });
-        } else {
-          // For admin/librarian: Block return
-          throw new BadRequestException(
-            `Cannot return book. Please pay pending fine of ${totalPendingAmount} first.`
-          );
-        }
+      if (!latestFine || latestFine.status === 'PENDING') {
+        const daysOverdue = Math.ceil(
+          (returnDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        const dailyRate = await this.getCurrentFineRate();
+        const fineAmount = Math.round(daysOverdue * dailyRate * 100) / 100;
+
+        const fine = latestFine && latestFine.status === 'PENDING'
+          ? await this.prisma.fine.update({
+              where: { id: latestFine.id },
+              data: {
+                amount: fineAmount,
+                reason: `Overdue by ${daysOverdue} day(s) (KES ${dailyRate} per day rate)`,
+              },
+            })
+          : await this.prisma.fine.create({
+              data: {
+                userId: borrow.userId,
+                borrowId: borrow.id,
+                amount: fineAmount,
+                reason: `Overdue by ${daysOverdue} day(s) (KES ${dailyRate} per day rate)`,
+              },
+            });
+
+        pendingFines = [fine];
+      }
+      // If latest fine is WAIVED or PAID, we intentionally leave pendingFines empty
+      // so the return can proceed without payment.
+    }
+
+    if (pendingFines.length > 0) {
+      totalAmount = pendingFines.reduce((s, f) => s + f.amount, 0);
+      fineIds = pendingFines.map((f) => f.id);
+
+      // Staff must ensure fines are paid before processing a return
+      if (!isStudentReturn) {
+        throw new BadRequestException(
+          `Cannot return book. Pay pending fine of KES ${totalAmount.toFixed(2)} first.`,
+        );
       }
     }
 
-    // Update borrow record
+    // Student return with fine: require M-Pesa STK push
+    if (isStudentReturn && fineIds.length > 0 && totalAmount > 0) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { phone: true },
+      });
+      const phone = returnBookDto.phone || user?.phone;
+      if (!phone || phone.trim() === '') {
+        throw new BadRequestException(
+          'Phone number required for M-Pesa payment. Add it in your profile or provide it when returning.'
+        );
+      }
+      const amountRounded = Math.round(totalAmount);
+      if (amountRounded < 1) {
+        throw new BadRequestException('Minimum M-Pesa amount is KES 1.');
+      }
+      const result = await this.mpesaService.initiateStkPush(
+        phone.trim(),
+        amountRounded,
+        borrow.id,
+        'Library fine',
+      );
+      if (!result.success || !result.checkoutRequestId) {
+        throw new BadRequestException(
+          result.errorMessage || 'Failed to initiate M-Pesa payment. Try again or pay at the library.'
+        );
+      }
+      await this.paymentRequestService.create(
+        result.checkoutRequestId,
+        borrow.id,
+        fineIds,
+        userId!,
+        amountRounded,
+        phone.trim(),
+      );
+      return {
+        requiresPayment: true,
+        checkoutRequestId: result.checkoutRequestId,
+        amount: amountRounded,
+        currency: 'KES',
+        message: 'Complete payment on your M-Pesa phone to complete the return.',
+      };
+    }
+
+    // No fine to pay: complete return
     const updatedBorrow = await this.prisma.borrow.update({
       where: { id },
-      data: {
-        returnDate,
-        status: 'RETURNED',
-      },
+      data: { returnDate, status: 'RETURNED' },
       include: {
         book: true,
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
+        user: { select: { id: true, firstName: true, lastName: true, email: true } },
         fines: true,
       },
     });
 
-    // Increase available copies
     await this.prisma.book.update({
       where: { id: borrow.bookId },
-      data: {
-        availableCopies: { increment: 1 },
-        status: 'AVAILABLE',
-      },
+      data: { availableCopies: { increment: 1 }, status: 'AVAILABLE' },
     });
 
-    // Send email notification for successful return
     await this.notificationsService.sendReturnConfirmation(borrow.id);
-
-    // If student returned with automatic fine payment, add it to response
-    const response: any = {
-      ...updatedBorrow,
-    };
-
-    if (fine && isStudentReturn) {
-      response.automaticFinePaid = {
-        amount: fine.amount,
-        reason: fine.reason,
-        status: fine.status,
-        paidDate: fine.paidDate,
-        message: `Book returned successfully. A fine of ${fine.amount} was automatically paid for late return.`
-      };
-    }
-
-    return response;
+    return updatedBorrow;
   }
 
   async renewBook(id: string, duration: BorrowDuration) {
@@ -308,6 +315,17 @@ export class BorrowsService {
 
     if (borrow.status !== 'ACTIVE') {
       throw new BadRequestException('Only active borrows can be renewed');
+    }
+
+    // Disallow renewal when there are outstanding fines for this borrow
+    const pendingFinesCount = await this.prisma.fine.count({
+      where: { borrowId: borrow.id, status: 'PENDING' },
+    });
+
+    if (pendingFinesCount > 0) {
+      throw new BadRequestException(
+        'You have outstanding fines for this book. Please pay the fine before renewing.',
+      );
     }
 
     const maxRenewals = this.configService.get('borrow.maxRenewals') || 3; // Default to 3 renewals
@@ -365,6 +383,7 @@ export class BorrowsService {
   async updateOverdueStatus() {
     const now = new Date();
 
+    // 1) Mark active borrows whose due date has passed as OVERDUE
     await this.prisma.borrow.updateMany({
       where: {
         status: 'ACTIVE',
@@ -375,7 +394,69 @@ export class BorrowsService {
       },
     });
 
-    console.log('✅ Overdue borrows updated');
+    // 2) Create or update pending fines for all overdue borrows so that
+    //    fines start counting from the day after the due date and
+    //    grow every day.
+    const overdueBorrows = await this.prisma.borrow.findMany({
+      where: {
+        status: 'OVERDUE',
+        dueDate: { lt: now },
+      },
+      select: {
+        id: true,
+        userId: true,
+        dueDate: true,
+      },
+    });
+
+    if (overdueBorrows.length > 0) {
+      const dailyRate = await this.getCurrentFineRate();
+      const dayMs = 24 * 60 * 60 * 1000;
+
+      for (const borrow of overdueBorrows) {
+        const dueDate = new Date(borrow.dueDate);
+        const daysOverdue = Math.max(
+          1,
+          Math.ceil((now.getTime() - dueDate.getTime()) / dayMs),
+        );
+        const fineAmount = Math.round(daysOverdue * dailyRate * 100) / 100;
+
+        const latestFine = await this.prisma.fine.findFirst({
+          where: {
+            borrowId: borrow.id,
+            userId: borrow.userId,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        // If the latest fine is WAIVED or PAID, respect that decision and do not
+        // recreate a pending fine for this borrow.
+        if (latestFine && (latestFine.status === 'WAIVED' || latestFine.status === 'PAID')) {
+          continue;
+        }
+
+        if (latestFine && latestFine.status === 'PENDING') {
+          await this.prisma.fine.update({
+            where: { id: latestFine.id },
+            data: {
+              amount: fineAmount,
+              reason: `Overdue by ${daysOverdue} day(s) (KES ${dailyRate} per day rate)`,
+            },
+          });
+        } else {
+          await this.prisma.fine.create({
+            data: {
+              userId: borrow.userId,
+              borrowId: borrow.id,
+              amount: fineAmount,
+              reason: `Overdue by ${daysOverdue} day(s) (KES ${dailyRate} per day rate)`,
+            },
+          });
+        }
+      }
+    }
+
+    console.log('✅ Overdue borrows and fines updated');
   }
 
   async getMyBorrows(userId: string) {
@@ -479,6 +560,10 @@ export class BorrowsService {
       where: { isActive: true },
       orderBy: { createdAt: 'desc' }
     });
+  }
+
+  async getReturnStatus(borrowId: string, userId: string) {
+    return this.paymentRequestService.getReturnStatus(borrowId, userId);
   }
 
   async calculateFine(borrowId: string): Promise<{ amount: number; daysOverdue: number }> {

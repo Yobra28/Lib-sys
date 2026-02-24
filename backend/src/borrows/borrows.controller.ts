@@ -63,6 +63,19 @@ export class BorrowsController {
     return this.borrowsService.getMyBorrows(userId);
   }
 
+  @Get(':id/return-status')
+  @Roles(UserRole.STUDENT)
+  @ApiOperation({ summary: 'Get return payment status (for polling after STK push)' })
+  getReturnStatus(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.borrowsService.getReturnStatus(id, userId);
+  }
+
+  @Get(':id/calculate-fine')
+  @ApiOperation({ summary: 'Calculate fine for a borrow record' })
+  calculateFine(@Param('id') id: string) {
+    return this.borrowsService.calculateFine(id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get borrow record by ID' })
   findOne(@Param('id') id: string) {
@@ -101,12 +114,6 @@ export class BorrowsController {
   @ApiOperation({ summary: 'Get my fines (Student only)' })
   getMyFines(@CurrentUser('id') userId: string) {
     return this.borrowsService.getMyFines(userId);
-  }
-
-  @Get(':id/calculate-fine')
-  @ApiOperation({ summary: 'Calculate fine for a borrow record' })
-  calculateFine(@Param('id') id: string) {
-    return this.borrowsService.calculateFine(id);
   }
 
   @Post('fine-configuration')

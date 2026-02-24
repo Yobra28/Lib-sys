@@ -258,11 +258,15 @@ export class NotificationsService {
     const now = new Date();
     const { start: todayStart, end: tomorrowStart } = this.getEatDayBounds(now);
 
-    // Targets at exactly -30m and -15m from end time (rounded to minute)
+    // Targets ~30m and ~15m from end time (rounded to minute)
     const target30 = new Date(now.getTime() + 30 * 60 * 1000);
     target30.setSeconds(0, 0);
     const target15 = new Date(now.getTime() + 15 * 60 * 1000);
     target15.setSeconds(0, 0);
+
+    // Use a wider matching window (±7 minutes) so we don't miss reservations
+    // due to small clock / scheduling differences.
+    const windowMs = 7 * 60 * 1000;
 
     const [reservations30, reservations15] = await Promise.all([
       this.prisma.seatReservation.findMany({
@@ -270,8 +274,8 @@ export class NotificationsService {
           status: 'APPROVED',
           reservationDate: { gte: todayStart, lt: tomorrowStart },
           endTime: {
-            gte: new Date(target30.getTime() - 60 * 1000),
-            lt: new Date(target30.getTime() + 60 * 1000),
+            gte: new Date(target30.getTime() - windowMs),
+            lt: new Date(target30.getTime() + windowMs),
           },
         },
         include: { user: true, seat: true },
@@ -281,8 +285,8 @@ export class NotificationsService {
           status: 'APPROVED',
           reservationDate: { gte: todayStart, lt: tomorrowStart },
           endTime: {
-            gte: new Date(target15.getTime() - 60 * 1000),
-            lt: new Date(target15.getTime() + 60 * 1000),
+            gte: new Date(target15.getTime() - windowMs),
+            lt: new Date(target15.getTime() + windowMs),
           },
         },
         include: { user: true, seat: true },

@@ -124,11 +124,78 @@ export class ReportsComponent implements OnInit {
   }
 
   exportToPDF() {
-    const content = document.createElement('div');
-    content.innerHTML = `\n      <h2>Smart Library Reports</h2>\n      <p>Most Borrowed Books</p>\n      <pre>${JSON.stringify(this.mostBorrowedBooks, null, 2)}</pre>\n      <p>Overdue Report</p>\n      <pre>${JSON.stringify(this.overdueReport, null, 2)}</pre>\n    `;
+    const rowsMostBorrowed = (this.mostBorrowedBooks || [])
+      .map((r: any) =>
+        `<tr>
+          <td>${r.title || r.book?.title || ''}</td>
+          <td>${r.author || r.book?.author || ''}</td>
+          <td>${r.count || r.timesBorrowed || ''}</td>
+        </tr>`,
+      )
+      .join('');
+
+    const rowsOverdue = (this.overdueReport || [])
+      .map((r: any) =>
+        `<tr>
+          <td>${r.book?.title || ''}</td>
+          <td>${r.user?.firstName || ''} ${r.user?.lastName || ''}</td>
+          <td>${r.daysOverdue ?? ''}</td>
+          <td>${r.totalFine ?? ''}</td>
+        </tr>`,
+      )
+      .join('');
+
+    const html = `
+      <html>
+        <head>
+          <title>Smart Library Reports</title>
+          <style>
+            body { font-family: Arial, sans-serif; font-size: 12px; padding: 16px; }
+            h2 { margin-top: 24px; margin-bottom: 8px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+            th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+            th { background: #f3f4f6; }
+          </style>
+        </head>
+        <body>
+          <h1>Smart Library Reports</h1>
+
+          <h2>Most Borrowed Books</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Borrows</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsMostBorrowed || '<tr><td colspan="3">No data</td></tr>'}
+            </tbody>
+          </table>
+
+          <h2>Overdue Books</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Book</th>
+                <th>User</th>
+                <th>Days Overdue</th>
+                <th>Total Fine</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsOverdue || '<tr><td colspan="4">No data</td></tr>'}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
     const w = window.open('', 'printWin');
     if (!w) return;
-    w.document.write(content.outerHTML);
+    w.document.open();
+    w.document.write(html);
     w.document.close();
     w.focus();
     w.print();

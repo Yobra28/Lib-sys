@@ -181,6 +181,29 @@ model FineConfiguration {
   @@map("fine_configurations")
 }
 
+enum PaymentRequestStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model PaymentRequest {
+  id                 String              @id @default(uuid())
+  checkoutRequestId  String              @unique
+  borrowId           String
+  fineIds            String
+  userId             String
+  amount             Float
+  phoneNumber        String
+  status             PaymentRequestStatus @default(PENDING)
+  mpesaReceiptNumber String?
+  completedAt        DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@map("payment_requests")
+}
+
 model Feedback {
   id        String   @id @default(uuid())
   userId    String
