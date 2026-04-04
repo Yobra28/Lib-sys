@@ -1,14 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BorrowService } from '../../../../core/services/borrow.service';
 import { ReservationService } from '../../../../core/services/reservation.service';
 import { FineService } from '../../../../core/services/fine.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { BookService, AiRecommendedBook } from '../../../../core/services/book.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { User } from '../../../../core/models/user.model';
+import { Observable } from 'rxjs';
 
 interface ActivityItem {
   type: 'borrow' | 'reservation' | 'return';
@@ -21,7 +24,7 @@ interface ActivityItem {
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [CommonModule, MatCardModule, RouterLink, MatProgressSpinnerModule],
+  imports: [CommonModule, ReactiveFormsModule, MatCardModule, RouterLink, MatProgressSpinnerModule],
   templateUrl: './student-dashboard.component.html',
   styleUrls: ['./student-dashboard.component.css']
 })
@@ -45,13 +48,30 @@ export class StudentDashboardComponent implements OnInit {
   // Loading
   loading = true;
 
+  /** Unread in-app notifications (includes due-date & seat reminders when sent). */
+  notificationUnread$: Observable<number>;
+
+  /** Quick search → browse books with prefilled query */
+  quickSearchControl = new FormControl<string>('', { nonNullable: true });
+
   constructor(
     private borrowService: BorrowService,
     private reservationService: ReservationService,
     private fineService: FineService,
     private authService: AuthService,
-    private bookService: BookService
-  ) {}
+    private bookService: BookService,
+    private notificationService: NotificationService,
+    private router: Router,
+  ) {
+    this.notificationUnread$ = this.notificationService.unreadCount$;
+  }
+
+  goToBookSearch(): void {
+    const q = this.quickSearchControl.value?.trim();
+    this.router.navigate(['/student/books'], {
+      queryParams: q ? { search: q } : {},
+    });
+  }
 
   ngOnInit() {
     // Get current user
@@ -66,6 +86,7 @@ export class StudentDashboardComponent implements OnInit {
     
     this.loadDashboardData();
     this.loadAiRecommendations();
+    this.notificationService.refreshUnreadCount();
   }
 
   loadAiRecommendations() {

@@ -171,7 +171,7 @@ model Fine {
 
 model FineConfiguration {
   id          String   @id @default(uuid())
-  dailyRate   Float    @default(50.0)
+  dailyRate   Float    @default(1.0)
   isActive    Boolean  @default(true)
   createdBy   String
   updatedBy   String?

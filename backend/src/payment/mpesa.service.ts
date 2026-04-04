@@ -1,9 +1,10 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
 
 const DARAJA_SANDBOX = 'https://sandbox.safaricom.co.ke';
 const DARAJA_PRODUCTION = 'https://api.safaricom.co.ke';
@@ -48,15 +49,20 @@ export class MpesaService {
       this.configService.get<string>('MPESA_ENV') === 'production'
         ? DARAJA_PRODUCTION
         : DARAJA_SANDBOX;
-    this.consumerKey = this.configService.get<string>('MPESA_CONSUMER_KEY') || '';
-    this.consumerSecret = this.configService.get<string>('MPESA_CONSUMER_SECRET') || '';
-    this.shortCode = this.configService.get<string>('MPESA_SHORTCODE') || '174379';
+    this.consumerKey =
+      this.configService.get<string>('MPESA_CONSUMER_KEY') || '';
+    this.consumerSecret =
+      this.configService.get<string>('MPESA_CONSUMER_SECRET') || '';
+    this.shortCode =
+      this.configService.get<string>('MPESA_SHORTCODE') || '174379';
     this.passkey = this.configService.get<string>('MPESA_PASSKEY') || '';
     const raw =
       this.configService.get<string>('MPESA_CALLBACK_BASE_URL') ||
       this.configService.get<string>('APP_URL') ||
       'http://localhost:3000';
-    this.callbackBaseUrl = (typeof raw === 'string' ? raw : '').trim().replace(/\/+$/, '');
+    this.callbackBaseUrl = (typeof raw === 'string' ? raw : '')
+      .trim()
+      .replace(/\/+$/, '');
   }
 
   isConfigured(): boolean {
@@ -67,16 +73,24 @@ export class MpesaService {
     if (this.accessToken && Date.now() < this.tokenExpiry) {
       return this.accessToken;
     }
-    const auth = Buffer.from(`${this.consumerKey}:${this.consumerSecret}`).toString('base64');
-    const res = await fetch(`${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
-      headers: { Authorization: `Basic ${auth}` },
-    });
+    const auth = Buffer.from(
+      `${this.consumerKey}:${this.consumerSecret}`,
+    ).toString('base64');
+    const res = await fetch(
+      `${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`,
+      {
+        headers: { Authorization: `Basic ${auth}` },
+      },
+    );
     if (!res.ok) {
       const text = await res.text();
       this.logger.error(`M-Pesa OAuth failed: ${res.status} ${text}`);
       throw new Error('M-Pesa authentication failed');
     }
-    const data = (await res.json()) as { access_token: string; expires_in: string };
+    const data = (await res.json()) as {
+      access_token: string;
+      expires_in: string;
+    };
     this.accessToken = data.access_token;
     this.tokenExpiry = Date.now() + (Number(data.expires_in) - 60) * 1000;
     return this.accessToken;
@@ -99,7 +113,8 @@ export class MpesaService {
       return {
         success: false,
         errorCode: 'NOT_CONFIGURED',
-        errorMessage: 'M-Pesa is not configured. Set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_PASSKEY.',
+        errorMessage:
+          'M-Pesa is not configured. Set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_PASSKEY.',
       };
     }
     const formattedPhone = this.formatPhone(phone);
@@ -137,14 +152,17 @@ export class MpesaService {
 
     try {
       const token = await this.getAccessToken();
-      const res = await fetch(`${this.baseUrl}/mpesa/stkpush/v1/processrequest`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      const res = await fetch(
+        `${this.baseUrl}/mpesa/stkpush/v1/processrequest`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
         },
-        body: JSON.stringify(body),
-      });
+      );
       const data = (await res.json()) as {
         MerchantRequestID?: string;
         CheckoutRequestID?: string;
@@ -174,7 +192,9 @@ export class MpesaService {
   }
 
   parseCallbackPayload(raw: unknown): MpesaCallbackPayload {
-    return (typeof raw === 'object' && raw !== null ? raw : {}) as MpesaCallbackPayload;
+    return (
+      typeof raw === 'object' && raw !== null ? raw : {}
+    ) as MpesaCallbackPayload;
   }
 
   getCheckoutResult(payload: MpesaCallbackPayload): {
@@ -196,7 +216,8 @@ export class MpesaService {
     const items = stk.CallbackMetadata?.Item;
     if (items) {
       const receipt = items.find((i) => i.Name === 'MpesaReceiptNumber');
-      if (receipt && typeof receipt.Value === 'string') receiptNumber = receipt.Value;
+      if (receipt && typeof receipt.Value === 'string')
+        receiptNumber = receipt.Value;
     }
     return {
       checkoutRequestId: stk.CheckoutRequestID,

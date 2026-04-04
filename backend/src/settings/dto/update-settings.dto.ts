@@ -21,7 +21,7 @@ export class UpdateSettingsDto {
   @IsString()
   libraryName?: string;
 
-  @ApiProperty({ example: 50, required: false })
+  @ApiProperty({ example: 1, required: false })
   @IsOptional()
   @IsNumber()
   fineRatePerDay?: number;

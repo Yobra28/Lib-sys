@@ -64,7 +64,7 @@ export interface BorrowDurationOption {
           </div>
           <ul class="text-sm text-blue-700 space-y-1">
             <li>• Due date will be calculated from today</li>
-            <li>• Fine of ₹50 per day if returned late</li>
+            <li>• Fine of KES 1 per day if returned late</li>
             <li>• You must pay any fines before returning the book</li>
             <li>• Book must be returned in good condition</li>
           </ul>

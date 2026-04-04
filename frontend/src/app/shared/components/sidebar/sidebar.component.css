@@ -12,6 +12,13 @@
 }
 .nav-item:hover { background-color: #f8fafc; }
 
+:host-context(html.dark) .nav-item {
+  color: #e2e8f0;
+}
+:host-context(html.dark) .nav-item:hover {
+  background-color: #1e293b;
+}
+
 /* Active pill */
 .nav-item.active-link {
   background-color: #f59e0b; /* amber-500 */
@@ -22,5 +29,9 @@
 
 /* Default icon color */
 .nav-item mat-icon { color: #475569; margin-right: 8px; }
+
+:host-context(html.dark) .nav-item:not(.active-link) mat-icon {
+  color: #94a3b8 !important;
+}
 
 .nav-item span { font-size: 14px; }

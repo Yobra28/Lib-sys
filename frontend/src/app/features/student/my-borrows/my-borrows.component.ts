@@ -97,7 +97,7 @@ import { AuthService } from '../../../core/services/auth.service';
                   </div>
                   <p class="text-sm text-blue-700">
                     This book is overdue. When you return, you will pay the fine via M-Pesa (STK push) to complete the return.
-                    Current fine rate: KES 50 per day. Pay via M-Pesa when you return.
+                    Current fine rate: KES 1 per day. Pay via M-Pesa when you return.
                   </p>
                 </div>
               </div>

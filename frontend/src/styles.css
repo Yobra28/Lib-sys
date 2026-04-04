@@ -228,3 +228,93 @@ body {
 .mat-mdc-form-field-label.mat-focused {
   color: #3b82f6;
 }
+
+/* ─── Dark mode (html.dark) — Material + app utilities ─── */
+.dark .page-title {
+  @apply text-slate-100;
+}
+.dark .filters-bar {
+  @apply border-slate-700 bg-slate-900/80 text-slate-100;
+}
+.dark .card {
+  @apply border-slate-700 bg-slate-900 text-slate-100;
+}
+.dark .table-header {
+  @apply bg-slate-800 text-slate-200;
+}
+.dark .btn-soft {
+  @apply border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700;
+}
+
+.dark .mat-mdc-card {
+  background-color: rgb(15 23 42 / 0.95) !important;
+  color: rgb(241 245 249) !important;
+  border-color: rgb(51 65 85) !important;
+}
+
+.dark mat-toolbar {
+  background-color: rgb(15 23 42 / 0.92) !important;
+  color: rgb(241 245 249) !important;
+}
+
+.dark .mat-mdc-paginator {
+  background-color: rgb(15 23 42) !important;
+  color: rgb(226 232 240) !important;
+}
+
+.dark .mat-mdc-header-row,
+.dark .mat-mdc-header-cell {
+  background-color: rgb(30 41 59) !important;
+  color: rgb(226 232 240) !important;
+}
+
+.dark .mat-mdc-row .mat-mdc-cell {
+  color: rgb(226 232 240);
+  border-bottom-color: rgb(51 65 85);
+}
+
+.dark .mat-mdc-dialog-surface,
+.dark .mdc-dialog__surface {
+  background-color: rgb(15 23 42) !important;
+  color: rgb(241 245 249) !important;
+}
+
+.dark .mat-mdc-form-field-label {
+  color: rgb(148 163 184) !important;
+}
+
+.dark .mat-mdc-input-element,
+.dark .mat-mdc-select-value-text {
+  color: rgb(241 245 249) !important;
+}
+
+.dark .mat-mdc-select-panel {
+  background-color: rgb(30 41 59) !important;
+}
+
+.dark .mat-mdc-option {
+  color: rgb(226 232 240) !important;
+}
+
+.dark .mat-mdc-option:hover {
+  background-color: rgb(51 65 85) !important;
+}
+
+/* ngx-toastr */
+.dark .toast-container .ngx-toastr {
+  background-color: rgb(30 41 59);
+  color: rgb(241 245 249);
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.4);
+}
+.dark .toast-success {
+  background-color: rgb(22 101 52 / 0.95);
+}
+.dark .toast-error {
+  background-color: rgb(127 29 29 / 0.95);
+}
+.dark .toast-info {
+  background-color: rgb(30 58 138 / 0.95);
+}
+.dark .toast-warning {
+  background-color: rgb(120 53 15 / 0.95);
+}

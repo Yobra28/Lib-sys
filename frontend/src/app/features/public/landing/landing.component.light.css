@@ -1,0 +1,149 @@
+/* Light theme when <html> has no .dark class */
+html:not(.dark) :host {
+  color: #0f172a;
+}
+
+html:not(.dark) .landing-root {
+  background: #f8fafc;
+}
+
+html:not(.dark) .landing-nav {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: #e2e8f0;
+}
+
+html:not(.dark) .brand-icon {
+  background: #e0e7ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+
+html:not(.dark) .brand-name {
+  color: #0f172a;
+}
+
+html:not(.dark) .nav-link {
+  color: #64748b;
+}
+
+html:not(.dark) .nav-link:hover {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.08);
+}
+
+html:not(.dark) .hero-bg {
+  background: linear-gradient(145deg, #eef2ff 0%, #e0e7ff 40%, #f5f3ff 100%);
+}
+
+html:not(.dark) .hero-bg::before {
+  background:
+    radial-gradient(ellipse 70% 55% at 25% 15%, rgba(99, 102, 241, 0.2) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 50% at 85% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+}
+
+html:not(.dark) .hero-kicker {
+  color: #5b21b6;
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+html:not(.dark) .hero-title {
+  color: #0f172a;
+}
+
+html:not(.dark) .hero-lead {
+  color: #475569;
+}
+
+html:not(.dark) .hero-meta {
+  color: #64748b;
+}
+
+html:not(.dark) .avatar-stack span {
+  border-color: #f8fafc;
+}
+
+html:not(.dark) .hero-panel-inner {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #e2e8f0;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.08);
+}
+
+html:not(.dark) .stat-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+html:not(.dark) .stat-label {
+  color: #64748b;
+}
+
+html:not(.dark) .stat-value {
+  color: #0f172a;
+}
+
+html:not(.dark) .section {
+  background: #f1f5f9;
+}
+
+html:not(.dark) .section-title {
+  color: #0f172a;
+}
+
+html:not(.dark) .section-sub {
+  color: #64748b;
+}
+
+html:not(.dark) .feature-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+html:not(.dark) .feature-card:hover {
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.1);
+}
+
+html:not(.dark) .feature-card h3 {
+  color: #0f172a;
+}
+
+html:not(.dark) .feature-card p {
+  color: #64748b;
+}
+
+html:not(.dark) .landing-footer {
+  background: #f8fafc;
+  border-top-color: #e2e8f0;
+}
+
+html:not(.dark) .footer-brand p,
+html:not(.dark) .footer-col a,
+html:not(.dark) .footer-bottom,
+html:not(.dark) .footer-social a {
+  color: #64748b;
+}
+
+html:not(.dark) .footer-col h3 {
+  color: #475569;
+}
+
+html:not(.dark) .footer-bottom {
+  border-top-color: #e2e8f0;
+}
+
+html:not(.dark) .cta-card {
+  border-color: #e2e8f0;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.1);
+}
+
+html:not(.dark) .btn-ghost {
+  color: #334155;
+  border-color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+html:not(.dark) .btn-ghost:hover {
+  color: #4f46e5;
+  border-color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.08);
+}

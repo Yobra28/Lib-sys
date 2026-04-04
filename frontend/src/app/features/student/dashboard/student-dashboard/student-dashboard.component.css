@@ -1,0 +1,8 @@
+/* Subtle caret / clear affordance for search */
+.student-dash-input::-webkit-search-cancel-button {
+  opacity: 0.55;
+}
+
+.student-dash-input:focus::-webkit-search-cancel-button {
+  opacity: 1;
+}

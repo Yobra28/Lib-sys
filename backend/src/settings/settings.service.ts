@@ -4,7 +4,7 @@ import { UpdateSettingsDto, SystemSettings } from './dto/update-settings.dto';
 
 const DEFAULT_SETTINGS = {
   libraryName: 'Smart Library',
-  fineRatePerDay: 50,
+  fineRatePerDay: 1,
   borrowLimit: 3,
   reservationLimit: 1,
   maxBorrowingDays: 14,

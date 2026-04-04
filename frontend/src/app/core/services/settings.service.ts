@@ -20,7 +20,7 @@ export interface SystemSettings {
 
 const DEFAULT_SETTINGS: SystemSettings = {
   libraryName: 'Smart Library',
-  fineRatePerDay: 50,
+  fineRatePerDay: 1,
   borrowLimit: 3,
   reservationLimit: 1,
   maxBorrowingDays: 14,

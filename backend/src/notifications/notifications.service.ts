@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -14,6 +14,7 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
   private transporter: nodemailer.Transporter;
   private readonly EAT_TZ = 'Africa/Nairobi';
   private readonly DAY_MS = 24 * 60 * 60 * 1000;
@@ -23,16 +24,41 @@ export class NotificationsService {
     private prisma: PrismaService,
     private configService: ConfigService,
   ) {
-    // Initialize email transporter
+    // Support flat .env names (EMAIL_HOST) and nested keys (email.host)
+    const host =
+      this.configService.get<string>('EMAIL_HOST') ??
+      this.configService.get<string>('email.host');
+    const portRaw =
+      this.configService.get<string>('EMAIL_PORT') ??
+      this.configService.get<string | number>('email.port');
+    const port = Number(portRaw) || 587;
+    const user =
+      this.configService.get<string>('EMAIL_USER') ??
+      this.configService.get<string>('email.user');
+    const pass =
+      this.configService.get<string>('EMAIL_PASSWORD') ??
+      this.configService.get<string>('email.password');
+
+    if (!host || !user) {
+      this.logger.warn(
+        'SMTP not configured: set EMAIL_HOST and EMAIL_USER in .env (optional: EMAIL_PORT, EMAIL_PASSWORD, EMAIL_FROM). Reminder emails will not send until then.',
+      );
+    }
+
     this.transporter = nodemailer.createTransport({
-      host: this.configService.get('email.host'),
-      port: this.configService.get('email.port'),
-      secure: false,
-      auth: {
-        user: this.configService.get('email.user'),
-        pass: this.configService.get('email.password'),
-      },
+      host,
+      port,
+      secure: port === 465,
+      auth: user && pass ? { user, pass } : undefined,
     });
+  }
+
+  private getEmailFrom(): string {
+    return (
+      this.configService.get<string>('EMAIL_FROM') ??
+      this.configService.get<string>('email.from') ??
+      'Library <noreply@library.local>'
+    );
   }
 
   async create(createNotificationDto: CreateNotificationDto) {
@@ -190,17 +216,25 @@ export class NotificationsService {
   }
 
   private async sendEmail(to: string, subject: string, text: string) {
+    if (!to?.trim()) {
+      this.logger.warn(`Skipping email "${subject}": user has no email address`);
+      return;
+    }
     try {
       await this.transporter.sendMail({
-        from: this.configService.get('email.from'),
+        from: this.getEmailFrom(),
         to,
         subject,
         text,
         html: `<p>${text}</p>`,
       });
-      console.log(`📧 Email sent to ${to}`);
+      this.logger.log(`Email sent to ${to}: ${subject}`);
     } catch (error) {
-      console.error('Failed to send email:', error.message);
+      const err = error as Error;
+      this.logger.error(
+        `Failed to send email to ${to}: ${err?.message ?? error}`,
+        err?.stack,
+      );
     }
   }
 

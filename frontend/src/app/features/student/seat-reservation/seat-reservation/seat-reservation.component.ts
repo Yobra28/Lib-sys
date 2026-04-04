@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,6 +16,12 @@ import { ToastrService } from 'ngx-toastr';
 import { SeatService } from '../../../../core/services/seat.service';
 import { ReservationService } from '../../../../core/services/reservation.service';
 import { Seat } from '../../../../core/models/seat.model';
+import {
+  pickSeatReservationCancelLine,
+  pickSeatReservationCancelTitle,
+  pickSeatReservationSuccessLine,
+  pickSeatReservationSuccessTitle,
+} from '../../../../core/messages/seat-reservation-success.messages';
 
 @Component({
   selector: 'app-seat-reservation',
@@ -36,13 +42,13 @@ import { Seat } from '../../../../core/models/seat.model';
     MatPaginatorModule
   ],
   template: `
-    <div class="p-6">
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">Reserve a Seat</h1>
+    <div class="p-6 text-slate-900 dark:text-slate-100">
+      <h1 class="mb-6 text-3xl font-bold text-gray-800 dark:text-slate-100">Reserve a Seat</h1>
 
       <!-- Reservation Form -->
-      <mat-card class="mb-6">
+      <mat-card class="mb-6 !bg-white dark:!bg-slate-900/90 dark:!border-slate-700">
         <mat-card-header>
-          <mat-card-title>Select Date & Time</mat-card-title>
+          <mat-card-title class="!text-slate-900 dark:!text-slate-100">Select Date & Time</mat-card-title>
         </mat-card-header>
         <mat-card-content class="pt-4">
           <form [formGroup]="reservationForm">
@@ -79,9 +85,9 @@ import { Seat } from '../../../../core/models/seat.model';
       </div>
 
       <!-- Available Seats -->
-      <mat-card *ngIf="!checking && availableSeats.length > 0">
+      <mat-card *ngIf="!checking && availableSeats.length > 0" class="!bg-white dark:!bg-slate-900/90 dark:!border-slate-700">
         <mat-card-header>
-          <mat-card-title>Available Seats ({{availableSeats.length}}/{{totalSeats}})</mat-card-title>
+          <mat-card-title class="!text-slate-900 dark:!text-slate-100">Available Seats ({{availableSeats.length}}/{{totalSeats}})</mat-card-title>
         </mat-card-header>
         <mat-card-content class="pt-4">
           <!-- Filter by Section -->
@@ -98,37 +104,37 @@ import { Seat } from '../../../../core/models/seat.model';
           <!-- Seats Grid -->
           <div class="grid grid-cols-5 md:grid-cols-10 gap-3">
             <button *ngFor="let seat of filteredSeats"
-                    class="aspect-square rounded flex flex-col items-center justify-center cursor-pointer transition"
-                    [class.bg-green-200]="!isSelected(seat)"
-                    [class.hover:bg-green-300]="!isSelected(seat)"
-                    [class.bg-blue-500]="isSelected(seat)"
-                    [class.text-white]="isSelected(seat)"
+                    type="button"
+                    class="aspect-square rounded flex flex-col items-center justify-center cursor-pointer border border-transparent transition hover:bg-green-300 dark:border-slate-600/50 dark:hover:bg-emerald-800/60"
+                    [ngClass]="isSelected(seat)
+                      ? 'bg-blue-500 text-white dark:bg-blue-600'
+                      : 'bg-green-200 text-slate-800 dark:bg-emerald-900/50 dark:text-emerald-100'"
                     (click)="toggleSeatSelection(seat)">
               <span class="text-xs font-semibold">{{seat.seatNumber}}</span>
-              <span class="text-[10px]">{{seat.section}}</span>
+              <span class="text-[10px] opacity-90">{{seat.section}}</span>
             </button>
           </div>
 
           <!-- Legend -->
-          <div class="flex gap-6 mt-6 text-sm">
+          <div class="mt-6 flex flex-wrap gap-6 text-sm text-slate-700 dark:text-slate-300">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 bg-green-200 rounded"></div>
+              <div class="h-6 w-6 rounded bg-green-200 dark:bg-emerald-800/70"></div>
               <span>Available</span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 bg-blue-500 rounded"></div>
+              <div class="h-6 w-6 rounded bg-blue-500 dark:bg-blue-600"></div>
               <span>Selected</span>
             </div>
           </div>
 
           <!-- Reserve Button -->
           <div class="mt-6" *ngIf="selectedSeat">
-            <mat-card class="bg-blue-50">
+            <mat-card class="bg-blue-50 dark:!bg-slate-800/90 dark:!border-slate-600">
               <mat-card-content>
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p class="font-semibold">Selected Seat: {{selectedSeat.seatNumber}}</p>
-                    <p class="text-sm text-gray-600">{{selectedSeat.section}} - Floor {{selectedSeat.floor}}</p>
+                    <p class="font-semibold text-slate-900 dark:text-slate-100">Selected Seat: {{selectedSeat.seatNumber}}</p>
+                    <p class="text-sm text-gray-600 dark:text-slate-400">{{selectedSeat.section}} - Floor {{selectedSeat.floor}}</p>
                   </div>
                   <button mat-raised-button color="primary" 
                           [disabled]="reserving"
@@ -144,14 +150,14 @@ import { Seat } from '../../../../core/models/seat.model';
       </mat-card>
 
       <!-- Conflicting Reservations -->
-      <mat-card *ngIf="!checking && conflictingReservations.length > 0" class="mt-6">
+      <mat-card *ngIf="!checking && conflictingReservations.length > 0" class="mt-6 !bg-white dark:!bg-slate-900/90 dark:!border-slate-700">
         <mat-card-header>
-          <mat-card-title>Seats Already Booked ({{conflictingReservations.length}})</mat-card-title>
+          <mat-card-title class="!text-slate-900 dark:!text-slate-100">Seats Already Booked ({{conflictingReservations.length}})</mat-card-title>
         </mat-card-header>
         <mat-card-content class="pt-4">
           <div class="grid grid-cols-5 md:grid-cols-10 gap-3">
             <div *ngFor="let conflict of conflictingReservations"
-                 class="aspect-square rounded flex flex-col items-center justify-center bg-red-200 text-red-800 cursor-pointer hover:bg-red-300 transition"
+                 class="aspect-square rounded flex flex-col items-center justify-center bg-red-200 text-red-800 cursor-pointer transition hover:bg-red-300 dark:bg-rose-900/45 dark:text-rose-100 dark:hover:bg-rose-900/70"
                  [title]="getConflictTooltip(conflict)">
               <span class="text-xs font-semibold">{{conflict.seatNumber}}</span>
               <span class="text-[10px]">{{conflict.section}}</span>
@@ -159,17 +165,17 @@ import { Seat } from '../../../../core/models/seat.model';
           </div>
           
           <!-- Legend -->
-          <div class="flex gap-6 mt-6 text-sm">
+          <div class="mt-6 flex flex-wrap gap-6 text-sm text-slate-700 dark:text-slate-300">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 bg-green-200 rounded"></div>
+              <div class="h-6 w-6 rounded bg-green-200 dark:bg-emerald-800/70"></div>
               <span>Available</span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 bg-blue-500 rounded"></div>
+              <div class="h-6 w-6 rounded bg-blue-500 dark:bg-blue-600"></div>
               <span>Selected</span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 bg-red-200 rounded"></div>
+              <div class="h-6 w-6 rounded bg-red-200 dark:bg-rose-900/60"></div>
               <span>Already Booked</span>
             </div>
           </div>
@@ -177,32 +183,32 @@ import { Seat } from '../../../../core/models/seat.model';
       </mat-card>
 
       <!-- No Available Seats -->
-      <mat-card *ngIf="!checking && availableSeats.length === 0 && searchPerformed">
-        <mat-card-content class="text-center py-10">
-          <mat-icon class="text-gray-300 text-8xl">event_busy</mat-icon>
-          <h2 class="text-2xl text-gray-600 mt-4">No seats available</h2>
-          <p class="text-gray-500 mt-2">Try a different date or time</p>
+      <mat-card *ngIf="!checking && availableSeats.length === 0 && searchPerformed" class="!bg-white dark:!bg-slate-900/90 dark:!border-slate-700">
+        <mat-card-content class="py-10 text-center">
+          <mat-icon class="text-8xl text-gray-300 dark:text-slate-600">event_busy</mat-icon>
+          <h2 class="mt-4 text-2xl text-gray-600 dark:text-slate-300">No seats available</h2>
+          <p class="mt-2 text-gray-500 dark:text-slate-400">Try a different date or time</p>
         </mat-card-content>
       </mat-card>
 
       <!-- My Reservations -->
-      <mat-card class="mt-6">
+      <mat-card class="mt-6 !bg-white dark:!bg-slate-900/90 dark:!border-slate-700">
         <mat-card-header>
-          <mat-card-title>My Reservations ({{paginationInfo?.total || 0}} total)</mat-card-title>
+          <mat-card-title class="!text-slate-900 dark:!text-slate-100">My Reservations ({{paginationInfo?.total || 0}} total)</mat-card-title>
         </mat-card-header>
         <mat-card-content class="pt-4">
-          <div *ngIf="myReservations.length === 0" class="text-center py-8 text-gray-500">
-            <mat-icon class="text-6xl text-gray-300">event_note</mat-icon>
+          <div *ngIf="myReservations.length === 0" class="py-8 text-center text-gray-500 dark:text-slate-400">
+            <mat-icon class="text-6xl text-gray-300 dark:text-slate-600">event_note</mat-icon>
             <p class="mt-4">No reservations yet</p>
           </div>
 
           <div *ngIf="myReservations.length > 0" class="space-y-4">
-            <mat-card *ngFor="let reservation of myReservations" class="hover:shadow-lg transition">
-              <mat-card-content class="flex justify-between items-center">
+            <mat-card *ngFor="let reservation of myReservations" class="transition hover:shadow-lg dark:!bg-slate-800/80 dark:!border-slate-600">
+              <mat-card-content class="flex items-center justify-between">
                 <div>
-                  <p class="font-semibold">Seat: {{reservation.seat?.seatNumber}}</p>
-                  <p class="text-sm text-gray-600">{{reservation.seat?.section}} - Floor {{reservation.seat?.floor}}</p>
-                  <p class="text-sm text-gray-600">
+                  <p class="font-semibold text-slate-900 dark:text-slate-100">Seat: {{reservation.seat?.seatNumber}}</p>
+                  <p class="text-sm text-gray-600 dark:text-slate-400">{{reservation.seat?.section}} - Floor {{reservation.seat?.floor}}</p>
+                  <p class="text-sm text-gray-600 dark:text-slate-400">
                     {{reservation.reservationDate | date}} • 
                     {{reservation.startTime | date:'shortTime'}} - {{reservation.endTime | date:'shortTime'}}
                   </p>
@@ -223,8 +229,8 @@ import { Seat } from '../../../../core/models/seat.model';
           </div>
 
           <!-- Pagination Controls -->
-          <div *ngIf="paginationInfo && paginationInfo.totalPages > 1" class="mt-6 flex justify-between items-center">
-            <div class="text-sm text-gray-600">
+          <div *ngIf="paginationInfo && paginationInfo.totalPages > 1" class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="text-sm text-gray-600 dark:text-slate-400">
               Showing {{((paginationInfo.page - 1) * paginationInfo.limit) + 1}} - 
               {{Math.min(paginationInfo.page * paginationInfo.limit, paginationInfo.total)}} of 
               {{paginationInfo.total}} reservations
@@ -238,7 +244,7 @@ import { Seat } from '../../../../core/models/seat.model';
                 Previous
               </button>
               
-              <span class="flex items-center px-4 text-sm">
+              <span class="flex items-center px-4 text-sm text-slate-700 dark:text-slate-300">
                 Page {{paginationInfo.page}} of {{paginationInfo.totalPages}}
               </span>
               
@@ -410,6 +416,9 @@ export class SeatReservationComponent implements OnInit {
     this.reserving = true;
     const formValue = this.reservationForm.value;
     const date = new Date(formValue.reservationDate).toISOString().split('T')[0];
+    const seatForMessage = this.selectedSeat;
+    const reservationDateForMessage = new Date(formValue.reservationDate);
+    const slotLabelForMessage = (formValue.slot as string) || '';
 
     this.reservationService.create({
       seatId: this.selectedSeat.id,
@@ -418,7 +427,15 @@ export class SeatReservationComponent implements OnInit {
       endTime: `${date}T${chosen.end}:00Z`
     }).subscribe({
       next: (_response: any) => {
-        this.toastr.success('Seat reserved successfully');
+        if (seatForMessage) {
+          this.showSeatReservationSuccessMessage(
+            seatForMessage,
+            reservationDateForMessage,
+            slotLabelForMessage
+          );
+        } else {
+          this.toastr.success('Seat reserved successfully');
+        }
         this.reserving = false;
         this.selectedSeat = null;
         this.loadMyReservations(this.currentPage);
@@ -431,11 +448,33 @@ export class SeatReservationComponent implements OnInit {
     });
   }
 
+  private showSeatReservationSuccessMessage(
+    seat: Seat,
+    reservationDate: Date,
+    slotLabel: string
+  ): void {
+    const dateStr = formatDate(reservationDate, 'mediumDate', 'en-GB');
+    const title = pickSeatReservationSuccessTitle();
+    const extra = pickSeatReservationSuccessLine();
+    const body =
+      `Seat ${seat.seatNumber} (${seat.section}, floor ${seat.floor}) — ${dateStr}, ${slotLabel}. ${extra}`;
+    this.toastr.success(body, title, {
+      timeOut: 10000,
+      closeButton: true,
+      progressBar: true,
+      enableHtml: false,
+    });
+  }
+
   cancelReservation(id: string) {
     if (confirm('Are you sure you want to cancel this reservation?')) {
       this.reservationService.cancel(id).subscribe({
       next: () => {
-          this.toastr.success('Reservation cancelled');
+          this.toastr.success(
+            pickSeatReservationCancelLine(),
+            pickSeatReservationCancelTitle(),
+            { timeOut: 8000, closeButton: true, progressBar: true },
+          );
           this.loadMyReservations(this.currentPage);
         },
         error: (_error: any) => {

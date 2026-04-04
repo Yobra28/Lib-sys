@@ -17,7 +17,6 @@ import { SettingsModule } from './settings/settings.module';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
-import { AiAgentService } from './ai/ai-agent.service';
 import { PaymentModule } from './payment/payment.module';
 
 @Module({
@@ -40,6 +39,6 @@ import { PaymentModule } from './payment/payment.module';
     CloudinaryModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, AiAgentService],
+  providers: [AppService, PrismaService],
 })
 export class AppModule {}

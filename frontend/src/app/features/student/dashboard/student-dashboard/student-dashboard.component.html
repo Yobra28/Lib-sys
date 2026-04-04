@@ -9,7 +9,23 @@
           </h1>
           <p class="text-slate-600 mt-2">Here's what's happening with your library activities</p>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 flex-wrap justify-end">
+          <a
+            routerLink="/student/notifications"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-amber-200 shadow-sm hover:border-amber-300 hover:shadow-md transition-all text-slate-800"
+            title="Due dates, seat reminders, and library alerts">
+            <span class="text-lg leading-none" aria-hidden="true">🔔</span>
+            <span class="font-medium text-sm hidden sm:inline">Notifications &amp; reminders</span>
+            <span class="font-medium text-sm sm:hidden">Alerts</span>
+            <ng-container *ngIf="notificationUnread$ | async as unread">
+              <span
+                *ngIf="unread > 0"
+                class="min-h-[1.25rem] min-w-[1.25rem] px-1.5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
+                aria-live="polite">
+                {{ unread > 99 ? '99+' : unread }}
+              </span>
+            </ng-container>
+          </a>
           <div class="text-right">
             <div class="text-sm text-slate-500">Current Time</div>
             <div class="text-lg font-semibold text-slate-900">{{ currentTime | date:'short' }}</div>
@@ -81,6 +97,38 @@
         <div class="mt-4 h-2 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full"></div>
       </div>
     </div>
+
+    <!-- Quick book search -->
+    <section class="mb-8" aria-label="Quick book search">
+      <div
+        class="rounded-2xl border border-indigo-200/60 bg-white/75 backdrop-blur-md p-5 sm:p-6 shadow-lg shadow-indigo-500/[0.06] ring-1 ring-white/60">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-indigo-600/90 mb-1">Find a book</h2>
+        <p class="text-sm text-slate-600 mb-4">Search the catalog from your dashboard</p>
+        <form class="flex flex-col sm:flex-row gap-3 sm:items-stretch" (ngSubmit)="goToBookSearch()">
+          <div class="relative flex-1 min-w-0 group">
+            <span
+              class="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-indigo-400 transition-colors group-focus-within:text-indigo-600"
+              aria-hidden="true">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.2-5.2M10 18a8 8 0 110-16 8 8 0 010 16z" />
+              </svg>
+            </span>
+            <input
+              id="student-dash-quick-search"
+              type="search"
+              [formControl]="quickSearchControl"
+              placeholder="Title, author, or ISBN…"
+              autocomplete="off"
+              class="student-dash-input w-full rounded-xl border-0 bg-slate-50/90 py-3.5 pl-12 pr-4 text-slate-900 shadow-inner ring-1 ring-inset ring-slate-200/90 transition duration-200 placeholder:text-slate-400 hover:bg-white hover:ring-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/35 focus:ring-offset-0" />
+          </div>
+          <button
+            type="submit"
+            class="shrink-0 rounded-xl px-6 py-3.5 text-sm font-semibold text-white shadow-md transition duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 shadow-indigo-500/20 hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg hover:shadow-indigo-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
+            Search catalog
+          </button>
+        </form>
+      </div>
+    </section>
 
     <!-- Quick Actions -->
     <div class="grid lg:grid-cols-3 gap-8">
@@ -154,6 +202,13 @@
                 <span class="text-white text-sm">📚</span>
               </div>
               <span class="font-medium text-slate-900">My Borrows</span>
+            </a>
+
+            <a routerLink="/student/notifications" class="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 hover:shadow-md transition-all duration-200 group">
+              <div class="h-8 w-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <span class="text-white text-sm">🔔</span>
+              </div>
+              <span class="font-medium text-slate-900">Notifications &amp; reminders</span>
             </a>
 
             <a routerLink="/student/feedback" class="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 hover:shadow-md transition-all duration-200 group">

@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsNotEmpty, IsOptional, Min } from 'class-validator';
 
 export class UpdateFineConfigurationDto {
-  @ApiProperty({ example: 50, description: 'Daily fine rate in Kenya Shillings (KES)' })
+  @ApiProperty({ example: 1, description: 'Daily fine rate in Kenya Shillings (KES)' })
   @IsNumber()
   @IsNotEmpty()
   @Min(0)

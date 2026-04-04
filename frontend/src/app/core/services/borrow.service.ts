@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Borrow } from '../models/borrow.model';
+import { Book } from '../models/book.model';
 
 export enum BorrowDuration {
   THREE_DAYS = '3_DAYS',
@@ -72,9 +73,9 @@ export class BorrowService {
     return this.http.post<Borrow>(this.apiUrl, data);
   }
 
-  // For students to borrow for themselves
-  createSelf(data: BorrowRequest): Observable<Borrow> {
-    return this.http.post<Borrow>(`${this.apiUrl}/self`, data);
+  /** Backend returns `{ borrow, recommendations }`. */
+  createSelf(data: BorrowRequest): Observable<{ borrow: Borrow; recommendations?: Book[] }> {
+    return this.http.post<{ borrow: Borrow; recommendations?: Book[] }>(`${this.apiUrl}/self`, data);
   }
 
   returnBook(id: string, body?: { notes?: string; phone?: string }): Observable<Borrow | ReturnPaymentRequired> {

@@ -1,18 +1,18 @@
-<div class="h-full flex flex-col">
+<div class="sidebar-shell flex h-full flex-col">
   <!-- Brand -->
-  <div class="px-4 py-3 border-b bg-white">
+  <div class="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center shadow-sm">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-white shadow-sm">
         <mat-icon>auto_stories</mat-icon>
       </div>
       <div>
-        <div class="font-semibold text-slate-800 leading-tight">Smart Library</div>
-        <div class="text-xs text-slate-500 -mt-0.5">{{ getUserRoleDisplay() }}</div>
+        <div class="font-semibold leading-tight text-slate-800 dark:text-slate-100">Smart Library</div>
+        <div class="-mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ getUserRoleDisplay() }}</div>
       </div>
     </div>
   </div>
 
-  <nav class="flex-1 p-3 space-y-1 bg-white">
+  <nav class="flex-1 space-y-1 bg-white p-3 dark:bg-slate-900">
     <!-- Admin/Librarian Menu -->
     <ng-container *ngIf="isAdmin; else studentMenu">
       <a mat-list-item routerLink="/admin/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}" class="nav-item rounded-lg !h-12">
@@ -103,10 +103,14 @@
   </nav>
 
   <!-- Footer user card -->
-  <div class="p-3 border-t bg-white">
-    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 mb-3" *ngIf="user as u">
-      <div class="text-sm font-medium text-slate-800">{{u.firstName}} {{u.lastName}}</div>
-      <div class="text-xs text-slate-500">{{u.email}}</div>
+  <div class="border-t border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+    <div class="mb-3 flex items-center justify-between gap-2">
+      <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Theme</span>
+      <app-theme-toggle />
+    </div>
+    <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800/80" *ngIf="user as u">
+      <div class="text-sm font-medium text-slate-800 dark:text-slate-100">{{u.firstName}} {{u.lastName}}</div>
+      <div class="text-xs text-slate-500 dark:text-slate-400">{{u.email}}</div>
     </div>
     <button mat-stroked-button color="primary" class="w-full" (click)="logout()">
       <mat-icon>logout</mat-icon>

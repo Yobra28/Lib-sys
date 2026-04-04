@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../../core/services/auth.service';
 import { User, UserRole } from '../../../core/models/user.model';
+import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-sidebar',
@@ -16,7 +17,8 @@ import { User, UserRole } from '../../../core/models/user.model';
     RouterLinkActive,
     MatListModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    ThemeToggleComponent,
   ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']

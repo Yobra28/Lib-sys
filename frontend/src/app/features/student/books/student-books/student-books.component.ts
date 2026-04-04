@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,10 +13,13 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ToastrService } from 'ngx-toastr';
+import { ActivatedRoute } from '@angular/router';
 import { BookService } from '../../../../core/services/book.service';
 import { BorrowService, BorrowDuration } from '../../../../core/services/borrow.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Book, BookStatus } from '../../../../core/models/book.model';
+import { Borrow } from '../../../../core/models/borrow.model';
+import { pickBorrowSuccessLine, pickBorrowSuccessTitle } from '../../../../core/messages/borrow-success.messages';
 import { BorrowDurationDialogComponent } from '../borrow-duration-dialog/borrow-duration-dialog.component';
 import { BookDetailDialogComponent } from '../book-detail-dialog/book-detail-dialog.component';
 import { RecommendationsDialogComponent } from '../recommendations-dialog/recommendations-dialog.component';
@@ -247,13 +250,18 @@ export class StudentBooksComponent implements OnInit {
     private borrowService: BorrowService,
     private authService: AuthService,
     private toastr: ToastrService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
-    this.loadBooks();
+    const fromDash = this.route.snapshot.queryParamMap.get('search');
+    if (fromDash) {
+      this.searchControl.setValue(fromDash, { emitEvent: false });
+    }
     this.loadCategories();
     this.setupSearchListener();
+    this.loadBooks();
     this.loadMyBorrows();
 
     // Auto-apply filters when category/status changes
@@ -332,15 +340,16 @@ export class StudentBooksComponent implements OnInit {
       bookId: book.id,
       duration: duration
     }).subscribe({
-      next: (res: any) => {
-        this.toastr.success(`Successfully borrowed \"${book.title}\"`);
+      next: (res) => {
+        const borrow = res.borrow;
+        this.showBorrowSuccessMessage(book, borrow);
         this.loadBooks(); // Refresh the list
         this.loadMyBorrows(); // Refresh borrowed set to disable button
         this.borrowing = false;
 
         // Show recommendations if available; otherwise fetch by category
         const currentUserId = this.authService.currentUserValue?.id || undefined;
-        const recs = res?.recommendations as Book[] | undefined;
+        const recs = res.recommendations;
         if (recs && recs.length) {
           this.openRecommendations(recs);
         } else if (book.category) {
@@ -353,6 +362,23 @@ export class StudentBooksComponent implements OnInit {
         this.toastr.error(error.error?.message || 'Failed to borrow book');
         this.borrowing = false;
       }
+    });
+  }
+
+  private showBorrowSuccessMessage(book: Book, borrow: Borrow): void {
+    const dueRaw = borrow?.dueDate;
+    const dueStr = dueRaw
+      ? formatDate(dueRaw, 'mediumDate', 'en-GB')
+      : 'see My Borrows for your due date';
+    const title = pickBorrowSuccessTitle();
+    const extra = pickBorrowSuccessLine();
+    const body =
+      `"${book.title}" is now checked out to you. Due back: ${dueStr}. ${extra}`;
+    this.toastr.success(body, title, {
+      timeOut: 10000,
+      closeButton: true,
+      progressBar: true,
+      enableHtml: false,
     });
   }
 

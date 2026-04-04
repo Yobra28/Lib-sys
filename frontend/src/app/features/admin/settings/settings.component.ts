@@ -172,7 +172,7 @@ export class SettingsComponent implements OnInit {
         this.updatePagedEntries();
         this.form.patchValue({
           libraryName: (this.data as any).libraryName ?? 'Smart Library',
-          fineRatePerDay: (this.data as any).fineRatePerDay ?? 50,
+          fineRatePerDay: (this.data as any).fineRatePerDay ?? 1,
           borrowLimit: (this.data as any).borrowLimit ?? 3,
           reservationLimit: (this.data as any).reservationLimit ?? 1,
           maxBorrowingDays: (this.data as any).maxBorrowingDays ?? 14,
@@ -188,7 +188,7 @@ export class SettingsComponent implements OnInit {
         // Use defaults when API is not available
         this.data = { 
           libraryName: 'Smart Library', 
-          fineRatePerDay: 50, 
+          fineRatePerDay: 1, 
           borrowLimit: 3, 
           reservationLimit: 1,
           maxBorrowingDays: 14,

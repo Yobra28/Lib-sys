@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -492,7 +493,7 @@ export class BorrowsService {
       where: { isActive: true },
       orderBy: { createdAt: 'desc' }
     });
-    return config?.dailyRate || 50.0; // Default rate
+    return config?.dailyRate ?? 1.0; // Default when no active FineConfiguration row
   }
 
   async payFine(payFineDto: PayFineDto, userId: string) {

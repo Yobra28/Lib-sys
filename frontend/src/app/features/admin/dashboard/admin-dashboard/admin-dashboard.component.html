@@ -5,9 +5,16 @@
       <h1 class="text-3xl font-semibold text-slate-800">Welcome back, {{currentUser?.firstName || 'Admin'}}!</h1>
       <p class="text-sm text-slate-500 mt-1">Here’s your admin dashboard overview</p>
     </div>
-    <div class="flex items-center gap-2">
-      <button class="rounded-md border border-slate-200 px-4 py-2 hover:bg-slate-50">View Reports</button>
-      <button class="btn-primary px-4 py-2 flex items-center gap-2"><mat-icon>add</mat-icon> Add Book</button>
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <a routerLink="/admin/reports" class="rounded-md border border-slate-200 px-4 py-2 hover:bg-slate-50 inline-block text-center">View Reports</a>
+      <a
+        routerLink="/admin/reminders"
+        class="rounded-md border border-slate-200 px-4 py-2 hover:bg-slate-50 inline-flex items-center gap-2"
+        title="Email reminder delivery logs">
+        <mat-icon class="!w-5 !h-5 !text-[1.25rem]">notifications_active</mat-icon>
+        Reminder logs
+      </a>
+      <a routerLink="/admin/books/new" class="btn-primary px-4 py-2 flex items-center gap-2"><mat-icon>add</mat-icon> Add Book</a>
     </div>
   </div>
 
